@@ -3,8 +3,11 @@
 
 #include <iostream>
 #include <array>
+#include <vector>
+#include <string>
+#include <fstream>
 
-class Memory {
+class RAM {
     private: 
         std::array<uint8_t, 0x4000> rom00; // Fixed ROM
         std::array<uint8_t, 0x4000> rom01; // Switchable ROM
@@ -19,12 +22,35 @@ class Memory {
         int dPadDirections;
         uint8_t mask;
     public:
-        Memory();
+        RAM();
         uint8_t readByte(uint16_t addr);
         uint16_t readShort(uint16_t addr);
         void writeByte(uint16_t addr, uint8_t value);
         void writeShort(uint16_t addr, uint16_t value);
         void copyToOAM(uint16_t OAM, uint16_t DMA, unsigned int length);
+        void changeROMbank(ROM rom, int bank);
+        void loadROM(ROM rom);
+};
+
+class ROM {
+    private:
+        std::vector<char> romData;
+        char gameTitle[17];
+        char typeROM;
+        char sizeROM;
+        char sizeRAM;
+        enum RomInfo { romType, romSize, ramSize };
+    public:
+        static const int romTitleOffset = 0x134;
+        static const int romTypeOffset = 0x147;
+        static const int romSizeOffset = 0x148;
+        static const int romRamOffset = 0x149;
+        static const int headerSize = 0x14F;
+        
+        ROM(std::string filename);
+        char get(RomInfo info);
+        void set(RomInfo info, char value);
+        std::vector<uint8_t> getData(int start = 0, int length = 0);
 };
 
 #endif

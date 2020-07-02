@@ -1,8 +1,11 @@
 #include <iostream>
 #include <array>
+#include <vector>
+#include <string>
+#include <fstream>
 #include "memory.h"
 
-Memory::Memory()
+RAM::RAM()
 {
     // Make sure initisalised to zero
     rom00.fill(0x0);
@@ -37,7 +40,7 @@ Memory::Memory()
     writeByte(0xFF49, 0xFF);
 }
 
-uint8_t Memory::readByte(uint16_t addr)
+uint8_t RAM::readByte(uint16_t addr)
 {
     if (0x0000 <= addr && addr < 0x4000) {
         return rom00[addr];
@@ -98,11 +101,11 @@ uint8_t Memory::readByte(uint16_t addr)
     return 0x0; // base case
 }
 
-uint16_t Memory::readShort(uint16_t addr) {
+uint16_t RAM::readShort(uint16_t addr) {
     return readByte(addr) | readByte(addr + 1) << 8;
 }
 
-void Memory::writeByte(uint16_t addr, uint8_t value)
+void RAM::writeByte(uint16_t addr, uint8_t value)
 {
     if (0x0000 <= addr && addr < 0x4000) {
         rom00[addr] = value;
@@ -168,13 +171,70 @@ void Memory::writeByte(uint16_t addr, uint8_t value)
     }
 }
 
-void Memory::writeShort(uint16_t addr, uint16_t value) {
+void RAM::writeShort(uint16_t addr, uint16_t value) {
     writeByte(addr, value & 0x00FF);
     writeByte(addr + 1, (value & 0xFF00) >> 8);
 }
 
-void Memory::copyToOAM(uint16_t OAM, uint16_t DMA, unsigned int length) {
+void RAM::copyToOAM(uint16_t OAM, uint16_t DMA, unsigned int length) {
 	for (unsigned int i = 0; i < length; i++) {
          writeByte(OAM + i, readByte(DMA + i));
     }
+}
+
+void RAM::changeROMbank(ROM rom, int bankNum) {
+    std::vector<uint8_t> romData = rom.getData(bankNum * 0x4000, 0x4000);
+    std::copy(romData.begin(), romData.end(), rom01);
+}
+
+void RAM::loadROM(ROM rom) {
+    std::vector<uint8_t> romData = rom.getData(0x0000, 0x8000);
+    std::copy(romData.begin(), romData.begin() + 0x4000, rom00);
+    std::copy(romData.begin() + 0x4000, romData.end(), rom01);
+}
+
+ROM::ROM(std::string filename) {
+    
+    std::array<char, headerSize> header;
+    int fSize;
+    std::ifstream f;
+
+    f.open(filename, std::ios::binary);
+    f.seekg(0, std::ios::end);
+    
+    fSize = f.tellg();
+    
+    romData.resize(fSize);
+    
+    f.seekg(0, std::ios::beg);
+    f.read(&romData[0], fSize);
+
+    f.seekg(0, std::ios::beg);
+    f.read(&header[0], headerSize);
+
+    set(romType, header[romTypeOffset]);
+
+    for (int i = 0; i<16; i++) {
+        gameTitle[i] = header[romTitleOffset + i];
+    }
+
+    set(romSize, 16 * (2 << (header[romSizeOffset] + 1))); // pow(2,header[ROM_SIZE_OFFSET]+1) * 16;
+    set(ramSize, 0.5 * (2 << (2 * header[romRamOffset]))); // rom.ramSize = pow(4, header[ROM_RAM_OFFSET])/2;
+
+    f.close();
+}
+
+char ROM::get(RomInfo info) {
+    switch (info) {
+        case(romType):
+            return typeROM;
+        case(romSize):
+            return sizeROM;
+        case(ramSize):
+            return sizeRAM;
+    }
+}
+
+std::vector<uint8_t> ROM::getData(int start, int length) {
+    return std::vector<uint8_t>(romData.begin() + start, romData.begin() + start + length);
 }
