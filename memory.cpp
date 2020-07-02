@@ -200,53 +200,6 @@ void RAM::loadROM(ROM rom) {
     }           
 }
 
-// Dump RAM using specific bank
-void RAM::dump(RamType ram, int start, int end, int lineLength) {
-    std::vector<uint8_t> data = {};
-    switch(ram) {
-        case(RamType::rom00):
-            for (auto byte : rom00)
-                data.push_back(byte);
-        case(RamType::rom01):
-            for (auto byte : rom01)
-                data.push_back(byte);
-        case(RamType::vram):
-            for (auto byte : vram)
-                data.push_back(byte);
-        case(RamType::extram):
-            for (auto byte : extram)
-                data.push_back(byte);
-        case(RamType::wram0):
-            for (auto byte : wram0)
-                data.push_back(byte);
-        case(RamType::wram1):
-            for (auto byte : wram1)
-                data.push_back(byte);
-        case(RamType::oam):
-            for (auto byte : oam)
-                data.push_back(byte);
-        case(RamType::io):
-            for (auto byte : io)
-                data.push_back(byte);
-        case(RamType::hram):
-            for (auto byte : hram)
-                data.push_back(byte);
-    }
-
-    end = end < 0 ? data.size() : end;
-
-    for (int j = start + 1; j <= end; j++) {
-        std::cout << "0x" << std::hex << (int)(data[j - 1]) << " ";
-        if (data[j - 1] < 0x10)
-            std::cout << " ";
-        if (j % lineLength == 0 && j != 0)
-            std::cout << std::endl;
-    }
-
-    std::cout << std::endl;
-}
-
-// Dump RAM using adress range
 void RAM::dump(uint16_t start, uint16_t end, int lineLength) {
     int dataByte;
 
@@ -266,20 +219,20 @@ ROM::ROM(std::string filename) {
     
     std::array<char, headerSize> header;
     int fSize;
-    std::ifstream f;
+    std::ifstream romFile;
 
-    f.open(filename, std::ios::binary);
-    f.seekg(0, std::ios::end);
+    romFile.open(filename, std::ios::binary);
+    romFile.seekg(0, std::ios::end);
     
-    fSize = f.tellg();
+    fSize = romFile.tellg();
     
     romData.resize(fSize);
     
-    f.seekg(0, std::ios::beg);
-    f.read(&romData[0], fSize);
+    romFile.seekg(0, std::ios::beg);
+    romFile.read(&romData[0], fSize);
 
-    f.seekg(0, std::ios::beg);
-    f.read(&header[0], headerSize);
+    romFile.seekg(0, std::ios::beg);
+    romFile.read(&header[0], headerSize);
 
     set(romType, header[romTypeOffset]);
 
@@ -290,7 +243,7 @@ ROM::ROM(std::string filename) {
     set(romSize, 16 * (2 << (header[romSizeOffset] + 1))); // pow(2,header[ROM_SIZE_OFFSET]+1) * 16;
     set(ramSize, 0.5 * (2 << (2 * header[romRamOffset]))); // rom.ramSize = pow(4, header[ROM_RAM_OFFSET])/2;
 
-    f.close();
+    romFile.close();
 }
 
 char ROM::get(RomInfo info) {
