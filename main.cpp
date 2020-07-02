@@ -1,5 +1,6 @@
 #include <iostream>
-#include "memory.cpp"
+#include "ram.cpp"
+#include "rom.cpp"
 
 int main() {
     RAM ram;
