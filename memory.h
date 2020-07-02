@@ -21,6 +21,7 @@ class Memory {
         uint16_t readShort(uint16_t addr);
         void writeByte(uint16_t addr, uint8_t value);
         void writeShort(uint16_t addr, uint16_t value);
+        void copyToOAM(uint16_t OAM, uint16_t DMA, unsigned int length);
 };
 
 #endif
