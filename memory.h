@@ -2,18 +2,19 @@
 #define MEMORY_H
 
 #include <iostream>
+#include <array>
 
 class Memory {
     private: 
-        uint8_t rom00[0x4000]; // Fixed ROM
-        uint8_t rom01[0x4000]; // Switchable ROM
-        uint8_t vram[0x2000]; // Video RAM
-        uint8_t extram[0x2000]; // External RAM
-        uint8_t wram0[0x1000]; // Work RAM bank 0
-        uint8_t wram1[0x1000]; // Work RAM bank 1 (switchable)
-        uint8_t oam[0x100]; // Sprite attribute table (OAM) 
-        uint8_t io[0x100]; // I/O Registers
-        uint8_t hram[0x80]; // High RAM
+        std::array<uint8_t, 0x4000> rom00; // Fixed ROM
+        std::array<uint8_t, 0x4000> rom01; // Switchable ROM
+        std::array<uint8_t, 0x2000> vram; // Video RAM
+        std::array<uint8_t, 0x2000> extram; // External RAM
+        std::array<uint8_t, 0x1000> wram0; // Work RAM bank 0
+        std::array<uint8_t, 0x1000> wram1; // Work RAM bank 1 (switchable)
+        std::array<uint8_t, 0x100> oam; // Sprite attribute table (OAM) 
+        std::array<uint8_t, 0x100> io; // I/O Registers
+        std::array<uint8_t, 0x80> hram; // High RAM
     public:
         Memory();
         uint8_t readByte(uint16_t addr);
