@@ -14,6 +14,27 @@ Memory::Memory()
     oam.fill(0x0);
     io.fill(0x0);
     hram.fill(0x0);
+
+    // Power up RAM initialisation
+    writeByte(0xFF10, 0x80);
+    writeByte(0xFF11, 0xBF);
+    writeByte(0xFF12, 0xF3);
+    writeByte(0xFF14, 0xBF);
+    writeByte(0xFF16, 0x3F);
+    writeByte(0xFF19, 0xBF);
+    writeByte(0xFF1A, 0x7F);
+    writeByte(0xFF1B, 0xFF);
+    writeByte(0xFF1C, 0x9F);
+    writeByte(0xFF1E, 0xBF);
+    writeByte(0xFF20, 0xFF);
+    writeByte(0xFF23, 0xBF);
+    writeByte(0xFF24, 0x77);
+    writeByte(0xFF25, 0xF3);
+    writeByte(0xFF26, 0xF1);
+    writeByte(0xFF40, 0x91);
+    writeByte(0xFF47, 0xFC);
+    writeByte(0xFF48, 0xFF);
+    writeByte(0xFF49, 0xFF);
 }
 
 uint8_t Memory::readByte(uint16_t addr)
@@ -89,7 +110,7 @@ void Memory::writeShort(uint16_t addr, uint16_t value) {
 }
 
 void Memory::copyToOAM(uint16_t OAM, uint16_t DMA, unsigned int length) {
-	for(unsigned int i = 0; i < length; i++) {
+	for (unsigned int i = 0; i < length; i++) {
          writeByte(OAM + i, readByte(DMA + i));
     }
 }
