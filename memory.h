@@ -7,6 +7,29 @@
 #include <string>
 #include <fstream>
 
+enum RomInfo { romType, romSize, ramSize };
+enum RamType { rom00, rom01, vram, extram, wram0, wram1, oam, io, hram };
+
+class ROM {
+    private:
+        std::vector<char> romData;
+        char gameTitle[17];
+        char typeROM;
+        char sizeROM;
+        char sizeRAM;
+    public:
+        static const int romTitleOffset = 0x134;
+        static const int romTypeOffset = 0x147;
+        static const int romSizeOffset = 0x148;
+        static const int romRamOffset = 0x149;
+        static const int headerSize = 0x14F;
+        
+        ROM(std::string filename);
+        char get(RomInfo info);
+        void set(RomInfo info, char value);
+        std::vector<uint8_t> getData(int start = 0, int length = 0);
+};
+
 class RAM {
     private: 
         std::array<uint8_t, 0x4000> rom00; // Fixed ROM
@@ -30,27 +53,8 @@ class RAM {
         void copyToOAM(uint16_t OAM, uint16_t DMA, unsigned int length);
         void changeROMbank(ROM rom, int bank);
         void loadROM(ROM rom);
-};
-
-class ROM {
-    private:
-        std::vector<char> romData;
-        char gameTitle[17];
-        char typeROM;
-        char sizeROM;
-        char sizeRAM;
-        enum RomInfo { romType, romSize, ramSize };
-    public:
-        static const int romTitleOffset = 0x134;
-        static const int romTypeOffset = 0x147;
-        static const int romSizeOffset = 0x148;
-        static const int romRamOffset = 0x149;
-        static const int headerSize = 0x14F;
-        
-        ROM(std::string filename);
-        char get(RomInfo info);
-        void set(RomInfo info, char value);
-        std::vector<uint8_t> getData(int start = 0, int length = 0);
+        void dump(RamType ram, int start = 0, int end = -1, int lineLength = 16);
+        void dump(uint16_t start, uint16_t end, int lineLength = 16);
 };
 
 #endif

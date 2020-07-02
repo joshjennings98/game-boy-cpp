@@ -184,13 +184,82 @@ void RAM::copyToOAM(uint16_t OAM, uint16_t DMA, unsigned int length) {
 
 void RAM::changeROMbank(ROM rom, int bankNum) {
     std::vector<uint8_t> romData = rom.getData(bankNum * 0x4000, 0x4000);
-    std::copy(romData.begin(), romData.end(), rom01);
+    std::cout << romData.size() << std::endl;
+    // std::copy(romData.begin(), romData.end(), rom01);
+    for (int i = 0; i < rom01.size(); i++)
+        rom01[i] = romData[i];
 }
 
 void RAM::loadROM(ROM rom) {
     std::vector<uint8_t> romData = rom.getData(0x0000, 0x8000);
-    std::copy(romData.begin(), romData.begin() + 0x4000, rom00);
-    std::copy(romData.begin() + 0x4000, romData.end(), rom01);
+    // std::copy(romData.begin(), romData.begin() + 0x4000, rom00);
+    // std::copy(romData.begin() + 0x4000, romData.end(), rom01);
+    for (int i = 0; i < 0x4000; i++) {
+        rom00[i] = romData[i];
+        rom01[i] = romData[i + 0x4000];
+    }           
+}
+
+// Dump RAM using specific bank
+void RAM::dump(RamType ram, int start, int end, int lineLength) {
+    std::vector<uint8_t> data = {};
+    switch(ram) {
+        case(RamType::rom00):
+            for (auto byte : rom00)
+                data.push_back(byte);
+        case(RamType::rom01):
+            for (auto byte : rom01)
+                data.push_back(byte);
+        case(RamType::vram):
+            for (auto byte : vram)
+                data.push_back(byte);
+        case(RamType::extram):
+            for (auto byte : extram)
+                data.push_back(byte);
+        case(RamType::wram0):
+            for (auto byte : wram0)
+                data.push_back(byte);
+        case(RamType::wram1):
+            for (auto byte : wram1)
+                data.push_back(byte);
+        case(RamType::oam):
+            for (auto byte : oam)
+                data.push_back(byte);
+        case(RamType::io):
+            for (auto byte : io)
+                data.push_back(byte);
+        case(RamType::hram):
+            for (auto byte : hram)
+                data.push_back(byte);
+    }
+
+    end = end < 0 ? data.size() : end;
+
+    for (int j = start + 1; j <= end; j++) {
+        std::cout << "0x" << std::hex << (int)(data[j - 1]) << " ";
+        if (data[j - 1] < 0x10)
+            std::cout << " ";
+        if (j % lineLength == 0 && j != 0)
+            std::cout << std::endl;
+    }
+
+    std::cout << std::endl;
+}
+
+// Dump RAM using adress range
+void RAM::dump(uint16_t start, uint16_t end, int lineLength) {
+    int dataByte;
+
+    for (int j = start + 1; j <= end; j++) {
+        dataByte = (int)(readByte(j - 1));
+        std::cout << "0x" << std::hex << dataByte << " ";
+        if (dataByte < 0x10)
+            std::cout << " ";
+        if (j % lineLength == 0 && j != 0)
+            std::cout << std::endl;
+    }
+
+    std::cout << std::endl;
 }
 
 ROM::ROM(std::string filename) {
@@ -232,6 +301,17 @@ char ROM::get(RomInfo info) {
             return sizeROM;
         case(ramSize):
             return sizeRAM;
+    }
+}
+
+void ROM::set(RomInfo info, char value) {
+    switch (info) {
+        case(romType):
+            typeROM = value;
+        case(romSize):
+            sizeROM = value;
+        case(ramSize):
+            sizeRAM = value;
     }
 }
 
