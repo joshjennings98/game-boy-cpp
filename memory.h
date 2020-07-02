@@ -15,6 +15,9 @@ class Memory {
         std::array<uint8_t, 0x100> oam; // Sprite attribute table (OAM) 
         std::array<uint8_t, 0x100> io; // I/O Registers
         std::array<uint8_t, 0x80> hram; // High RAM
+        int dPadButtons;
+        int dPadDirections;
+        uint8_t mask;
     public:
         Memory();
         uint8_t readByte(uint16_t addr);

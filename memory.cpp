@@ -58,9 +58,37 @@ uint8_t Memory::readByte(uint16_t addr)
         return oam[addr - 0xFE00];
     } else if (0xFEA0 <= addr && addr < 0xFF00) {
         // 0xFEA0 - 0xFF00 is unusable
-        return 0;
+        return 0x0;
+    } else if (addr == 0xFF00) {
+        mask = 0;
+        if (!dPadButtons) {
+            // set mask to getButton
+        }
+        if (!dPadDirections) {
+            // set mask to getDirection
+        }
+        // return 0xC0 | (0xF ^ mask) | (dPadButtons | dPadDirections);
+    } else if (addr == 0xFF04) {
+        // return Div
+    } else if (addr == 0xFF05) {
+        // return Tima
+    } else if (addr == 0xFF06) {
+        // return Tma
+    } else if (addr == 0xFF04) {
+        // return Tac
+    } else if (addr == 0xFF0F) {
+        // return interrupt flags
+    } else if (addr == 0xFF40) {
+        // return LCDC
+    } else if (addr == 0xFF41) {
+        // return LCDS
+    } else if (addr == 0xFF42) {
+        // return scroll y
+    } else if (addr == 0xFF43) {
+        // return scroll x
+    } else if (addr == 0xFF44) {
+        // return get line
     } else if (0xFF00 <= addr && addr < 0xFF80) {
-        // Sort out weird stuff here
         return io[addr - 0xFF00];
     } else if (0xFF80 <= addr && addr < 0xFFFF) {
         return hram[addr - 0xFF80];
@@ -95,6 +123,42 @@ void Memory::writeByte(uint16_t addr, uint8_t value)
         oam[addr - 0xFE00] = value;
     } else if (0xFEA0 <= addr && addr < 0xFF00) {
         // 0xFEA0 - 0xFF00 is unusable
+    } else if (addr == 0xFF04) { 
+        // set Div to value
+    } else if (addr == 0xFF05) { 
+        // set Tima to value
+    } else if (addr == 0xFF06) { 
+        // set Tma to value
+    } else if (addr == 0xFF04) { 
+        // set Tac to value
+    } else if (addr == 0xFF40) { 
+        // set LCDC to value
+    } else if (addr == 0xFF41) { 
+        // set LCDS to value
+    } else if (addr == 0xFF42) { 
+        // set Scroll Y to value
+    } else if (addr == 0xFF43) { 
+        // set Scroll X to value
+    } else if (addr == 0xFF45) { 
+        // set Ly Compare to value
+    } else if(addr == 0xFF46) { 
+        // Direct memory access for OAM
+        copyToOAM(0xfe00, value << 8, 160);
+    } else if (addr == 0xFF47) { 
+        // set BG Palette to value
+    } else if (addr == 0xFF48) { 
+        // set Sprite Palette 1 to value
+    } else if (addr == 0xFF49) { 
+        // set Sprite Palette 2 to value
+    } else if (addr == 0xFF4A) { 
+        // set Window Y to value
+    } else if (addr == 0xFF4B) {
+        // set Window X to value
+    } else if (addr == 0xFF00) {
+        dPadDirections = value & 0x10;
+        dPadButtons = value & 0x20;
+    } else if (addr == 0xFF0F) {
+        // set interrupt flags to value
     } else if (0xFF00 <= addr && addr < 0xFF80) {
         io[addr - 0xFF00] = value;
     } else if (0xFF80 <= addr && addr < 0xFFFF) {
