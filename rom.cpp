@@ -3,34 +3,44 @@
 #include "rom.h"
 
 ROM::ROM(std::string filename) {
-    
-    std::array<char, headerSize> header;
-    int fSize;
-    std::ifstream romFile;
 
-    romFile.open(filename, std::ios::binary);
-    romFile.seekg(0, std::ios::end);
+    std::cout << "Trying to load " << filename << std::endl;
     
-    fSize = romFile.tellg();
-    
-    romData.resize(fSize);
-    
-    romFile.seekg(0, std::ios::beg);
-    romFile.read(&romData[0], fSize);
+    try {
+        std::array<char, headerSize> header;
+        int fSize;
+        std::ifstream romFile;
 
-    romFile.seekg(0, std::ios::beg);
-    romFile.read(&header[0], headerSize);
+        romFile.open(filename, std::ios::binary);
+        romFile.seekg(0, std::ios::end);
+        
+        fSize = romFile.tellg();
+        
+        romData.resize(fSize);
+        
+        romFile.seekg(0, std::ios::beg);
+        romFile.read(&romData[0], fSize);
 
-    set(romType, header[romTypeOffset]);
+        romFile.seekg(0, std::ios::beg);
+        romFile.read(&header[0], headerSize);
 
-    for (int i = 0; i<16; i++) {
-        gameTitle[i] = header[romTitleOffset + i];
+        set(romType, header[romTypeOffset]);
+
+        for (int i = 0; i<16; i++) {
+            gameTitle[i] = header[romTitleOffset + i];
+        }
+
+        set(romSize, 16 * (2 << (header[romSizeOffset] + 1))); // pow(2,header[ROM_SIZE_OFFSET]+1) * 16;
+        set(ramSize, 0.5 * (2 << (2 * header[romRamOffset]))); // rom.ramSize = pow(4, header[ROM_RAM_OFFSET])/2;
+
+        romFile.close();
+    }
+    catch (const std::bad_alloc& e) {
+        std::cout << "Invalid rom file." << std::endl;
+        exit(0);
     }
 
-    set(romSize, 16 * (2 << (header[romSizeOffset] + 1))); // pow(2,header[ROM_SIZE_OFFSET]+1) * 16;
-    set(ramSize, 0.5 * (2 << (2 * header[romRamOffset]))); // rom.ramSize = pow(4, header[ROM_RAM_OFFSET])/2;
-
-    romFile.close();
+    std::cout << "Successfully loaded " << filename << std::endl;
 }
 
 char ROM::get(RomInfo info) {
