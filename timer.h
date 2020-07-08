@@ -18,8 +18,8 @@ class Timer {
         Interrupts * interrupt;
         // CPU * cpu;
     public:
-        unsigned int time = 0;
-        unsigned int change = 0;
+        unsigned int time;
+        unsigned int change;
 
         Timer(Interrupts * interrupt /*, CPU * cpu */);
 

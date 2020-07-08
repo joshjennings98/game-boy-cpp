@@ -3,6 +3,9 @@
 
 Timer::Timer(Interrupts * interrupt /*, CPU * cpu */)
 {
+    time = 0;
+    change = 0;
+    
     this->interrupt = interrupt;
     // this->cpu = cpu
 }
