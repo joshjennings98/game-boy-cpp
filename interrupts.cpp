@@ -32,3 +32,13 @@ void Interrupts::doCycle() {
         }
     }
 }
+
+uint8_t Interrupts::getFlags()
+{
+    return flags;
+}
+
+void Interrupts::updateFlags(InterruptTypes interrupt)
+{
+    flags |= interrupt;
+}

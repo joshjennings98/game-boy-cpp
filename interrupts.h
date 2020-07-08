@@ -3,20 +3,23 @@
 
 #include <iostream>
 
+// vblank  = 1 << 0
+// lcdstat = 1 << 1
+// time    = 1 << 2
+// serial  = 1 << 3
+// joypad  = 1 << 4
+enum InterruptTypes { vblank = 0x1, lcdstat = 0x2, timer = 0x4, serial = 0x8, joypad = 0x10 };
+
 class Interrupts {
     private:
-        const uint8_t vblank = 0x1; // 1 << 0
-        const uint8_t lcdstat = 0x2; // 1 << 1
-        const uint8_t timer = 0x4; // 1 << 2
-        const uint8_t serial = 0x8; // 1 << 3
-        const uint8_t joypad = 0x10; // 1 << 4
-
         uint8_t master;
         uint8_t enable;
         uint8_t flags;
         uint8_t pending;
     public:
         void doCycle();
+        uint8_t getFlags();
+        void updateFlags(InterruptTypes interrupt);
 };
 
 #endif
