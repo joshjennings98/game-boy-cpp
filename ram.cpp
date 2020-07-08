@@ -102,7 +102,7 @@ uint8_t RAM::readByte(uint16_t addr)
     return 0x0; // base case
 }
 
-uint16_t RAM::readShort(uint16_t addr) {
+uint16_t RAM::readWord(uint16_t addr) {
     return readByte(addr) | readByte(addr + 1) << 8;
 }
 
@@ -172,7 +172,7 @@ void RAM::writeByte(uint16_t addr, uint8_t value)
     }
 }
 
-void RAM::writeShort(uint16_t addr, uint16_t value) {
+void RAM::writeWord(uint16_t addr, uint16_t value) {
     writeByte(addr, value & 0x00FF);
     writeByte(addr + 1, (value & 0xFF00) >> 8);
 }

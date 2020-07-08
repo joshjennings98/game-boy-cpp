@@ -25,9 +25,9 @@ class RAM {
     public:
         RAM();
         uint8_t readByte(uint16_t addr);
-        uint16_t readShort(uint16_t addr);
+        uint16_t readWord(uint16_t addr);
         void writeByte(uint16_t addr, uint8_t value);
-        void writeShort(uint16_t addr, uint16_t value);
+        void writeWord(uint16_t addr, uint16_t value);
         void copyToOAM(uint16_t OAM, uint16_t DMA, unsigned int length);
         void changeROMbank(ROM rom, int bank);
         void loadROM(ROM rom);
