@@ -1,6 +1,9 @@
 #include <iostream>
 #include <SDL2/SDL.h>
-#include "io.h"
+#include "sdl.h"
+
+struct timeval t1, t2;
+SDL_Surface * screenX;
 
 Keypad::Keypad()
 {
@@ -78,6 +81,31 @@ void Display::drawDisplay(int scale, SDL_Renderer * renderer)
         }
     }
     SDL_RenderPresent(renderer);
+}
+
+void Display::sdlSetFrame()
+{
+    if (frames == 0) {
+        gettimeofday(&t1, NULL);
+    }
+    frames++;
+    if (frames % 1000 == 0) { 
+        gettimeofday(&t2, NULL);
+        printf("FPS: %i\n", frames/((int)t2.tv_sec - (int)t1.tv_sec));
+    }
+    SDL_UpdateWindowSurface(screen);
+}
+
+void Display::sdlInit() {
+    SDL_Init(SDL_INIT_VIDEO);
+    this->screen = SDL_CreateWindow("Game Boy Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160, 144, SDL_WINDOW_OPENGL); 
+    screenX = SDL_GetWindowSurface(this->screen);
+    frames = 0;
+}
+
+unsigned int * Display::sdlFrameBuffer()
+{
+    return 0 ; //screen->pixels;
 }
 
 void Keypad::setPressed(int key, bool value) // {Up, Down, Left, Right, A, B, Start, Select}

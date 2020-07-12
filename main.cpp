@@ -6,7 +6,7 @@
 #include "rom.cpp"
 #include "interrupts.cpp"
 #include "timer.cpp"
-#include "io.cpp"
+#include "sdl.cpp"
 
 int main() {
     RAM ram;
