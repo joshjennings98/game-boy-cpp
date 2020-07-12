@@ -20,6 +20,10 @@ class Interrupts {
         void doCycle();
         uint8_t getFlags();
         void updateFlags(InterruptTypes interrupt);
-};
+        void setMaster(uint8_t value);
+        void setEnable(uint8_t value);
+        void setPending(uint8_t value);
+        void setFlags(uint8_t value);
+};  
 
 #endif

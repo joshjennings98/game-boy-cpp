@@ -42,3 +42,23 @@ void Interrupts::updateFlags(InterruptTypes interrupt)
 {
     flags |= interrupt;
 }
+
+void Interrupts::setMaster(uint8_t value)
+{
+    master = value;
+}
+
+void Interrupts::setEnable(uint8_t value)
+{
+    enable = value;
+}
+
+void Interrupts::setPending(uint8_t value)
+{
+    pending = value;
+}
+
+void Interrupts::setFlags(uint8_t value)
+{
+    flags = value;
+}
