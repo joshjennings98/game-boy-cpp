@@ -104,6 +104,48 @@ void CPU::cpuInterrupt(uint16_t address)
     set(PC, address);
 }
 
+void CPU::interruptCycle() {
+    uint8_t master = interrupts.get(Master);
+    uint8_t enable = interrupts.get(Enable);
+    uint8_t pending = interrupts.get(Pending);
+    uint8_t flags = interrupts.get(Flags);
+
+    if (pending == 1) {
+        interrupts.set(Pending, 0);
+    } else if (master && enable && flags) {
+
+        if (enable & flags & vblank) {
+            flags &= ~vblank; // turn off specific flag
+            interrupts.set(Flags, flags);
+            cpuInterrupt(0x40);
+        }
+
+        if (enable & flags & lcdstat) {
+            flags &= ~lcdstat;
+            interrupts.set(Flags, flags);
+            cpuInterrupt(0x48);
+        }
+
+        if (enable & flags & timer) {
+            flags &= ~timer;
+            interrupts.set(Flags, flags);
+            cpuInterrupt(0x50);
+        }
+        
+        if (enable & flags & serial) {
+            flags &= ~serial;
+            interrupts.set(Flags, flags);
+            cpuInterrupt(0x58);
+        }
+
+        if (enable & flags & joypad) {
+            flags &= ~joypad;
+            interrupts.set(Flags, flags);
+            cpuInterrupt(0x60);
+        }
+    }
+}
+
 unsigned int CPU::getCycles()
 {
     return cycles;

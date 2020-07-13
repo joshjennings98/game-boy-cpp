@@ -34,6 +34,7 @@ class CPU {
         void decrement(Registers8 reg, int i = 1);
         void decrement(Registers16 reg, int i = 1);
         void cpuInterrupt(uint16_t address);
+        void interruptCycle();
         unsigned int getCycles();
         void cpuCycle();
         void cbPrefix(uint8_t inst);

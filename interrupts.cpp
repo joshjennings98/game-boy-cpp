@@ -1,6 +1,8 @@
 #include <iostream>
 #include "interrupts.h"
+#include "cpu.h"
 
+/*
 void Interrupts::doCycle() {
     if (pending == 1) {
         pending = 0;
@@ -8,30 +10,31 @@ void Interrupts::doCycle() {
 
         if (enable & flags & vblank) {
             flags &= ~vblank; // turn off specific flag
-            // do cpuInterrupt 0x40
+            cpuInterrupt(0x40);
         }
 
         if (enable & flags & lcdstat) {
             flags &= ~lcdstat;
-            // do cpuInterrupt(0x48
+            cpuInterrupt(0x48);
         }
 
         if (enable & flags & timer) {
             flags &= ~timer;
-            // do cpuInterrupt 0x50
+            cpuInterrupt(0x50);
         }
         
         if (enable & flags & serial) {
             flags &= ~serial;
-            // do cpuInterrupt 0x58
+            cpuInterrupt(0x58);
         }
 
         if (enable & flags & joypad) {
             flags &= ~joypad;
-            // do cpuInterrupt 0x60
+            cpuInterrupt(0x60);
         }
     }
 }
+*/
 
 uint8_t Interrupts::getFlags()
 {
@@ -58,6 +61,22 @@ void Interrupts::set(InterruptFlag flag, bool value)
         case(Flags):
             flags = value;
             break;
+        default:
+            break;
+    }
+}
+
+uint8_t Interrupts::get(InterruptFlag flag)
+{
+    switch(flag) {
+        case(Master):
+            return master;
+        case(Enable):
+            return enable;
+        case(Pending):
+            return pending;
+        case(Flags):
+            return flags;
         default:
             break;
     }

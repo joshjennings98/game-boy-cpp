@@ -6,15 +6,17 @@
 #include "rom.cpp"
 #include "interrupts.cpp"
 #include "timer.cpp"
-#include "sdl.cpp"
+// #include "sdl.cpp"
+#include "cpu.cpp"
 
 int main() {
-    RAM ram;
+    CPU cpu;
     ROM rom("tetris.gb");
-    ram.loadROM(rom);
+    cpu.ram.loadROM(rom);
 
     // test crap
-    // ram.dump(0x0000, 0x0020);
+    cpu.ram.dump(0x0000, 0x0020);
+    /*
 
     Keypad keypad = Keypad();
     Display display = Display();
@@ -39,7 +41,6 @@ int main() {
                 display.set(i, j, (display.get(i, j) + 1) % 255);
             }
         }
-        // */
 
         display.drawDisplay(scale, renderer);
         keypad.handleInput(e);
@@ -49,6 +50,7 @@ int main() {
 
         //std::cout << "cycle " << i << std::endl;
     }
+    */
 
     return 0;
 }

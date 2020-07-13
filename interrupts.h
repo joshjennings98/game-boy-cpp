@@ -22,6 +22,7 @@ class Interrupts {
         uint8_t getFlags();
         void updateFlags(InterruptTypes interrupt);
         void set(InterruptFlag flag, bool value);
+        uint8_t get(InterruptFlag flag);
 };  
 
 #endif
