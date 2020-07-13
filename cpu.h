@@ -19,7 +19,9 @@ class CPU {
     public:
         Interrupts interrupts;
         RAM ram;
-        
+
+        bool halted;
+
         CPU();
         void set(Registers8 reg, uint8_t value);
         void set(Registers16 reg, uint16_t value);
@@ -27,6 +29,10 @@ class CPU {
         uint8_t get(Registers8 reg);
         uint16_t get(Registers16 reg);
         bool get(Flag flag);
+        void increment(Registers8 reg, int i = 1);
+        void increment(Registers16 reg, int i = 1);
+        void decrement(Registers8 reg, int i = 1);
+        void decrement(Registers16 reg, int i = 1);
         void cpuInterrupt(uint16_t address);
         unsigned int getCycles();
         void cpuCycle();
