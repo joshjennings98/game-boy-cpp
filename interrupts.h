@@ -9,6 +9,7 @@
 // serial  = 1 << 3
 // joypad  = 1 << 4
 enum InterruptTypes { vblank = 0x1, lcdstat = 0x2, timer = 0x4, serial = 0x8, joypad = 0x10 };
+enum InterruptFlag { Master, Enable, Pending, Flags };
 
 class Interrupts {
     private:
@@ -20,10 +21,7 @@ class Interrupts {
         void doCycle();
         uint8_t getFlags();
         void updateFlags(InterruptTypes interrupt);
-        void setMaster(uint8_t value);
-        void setEnable(uint8_t value);
-        void setPending(uint8_t value);
-        void setFlags(uint8_t value);
+        void set(InterruptFlag flag, bool value);
 };  
 
 #endif

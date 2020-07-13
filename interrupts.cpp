@@ -43,22 +43,22 @@ void Interrupts::updateFlags(InterruptTypes interrupt)
     flags |= interrupt;
 }
 
-void Interrupts::setMaster(uint8_t value)
+void Interrupts::set(InterruptFlag flag, bool value)
 {
-    master = value;
-}
-
-void Interrupts::setEnable(uint8_t value)
-{
-    enable = value;
-}
-
-void Interrupts::setPending(uint8_t value)
-{
-    pending = value;
-}
-
-void Interrupts::setFlags(uint8_t value)
-{
-    flags = value;
+    switch(flag) {
+        case(Master):
+            master = value;
+            break;
+        case(Enable):
+            enable = value;
+            break;
+        case(Pending):
+            pending = value;
+            break;
+        case(Flags):
+            flags = value;
+            break;
+        default:
+            break;
+    }
 }
