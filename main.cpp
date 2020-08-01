@@ -2,17 +2,19 @@
 #include <chrono>
 #include <thread>
 #include <SDL2/SDL.h>
+
 #include "ram.cpp"
 #include "rom.cpp"
 #include "interrupts.cpp"
 #include "timer.cpp"
-// #include "sdl.cpp"
+//#include "lcd.cpp"
+//#include "sdl.cpp"
 #include "cpu.cpp"
 
 int main() {
     CPU cpu;
-    ROM rom("tetris.gb");
-    cpu.ram.loadROM(rom);
+
+    cpu.loadROM("tetris.gb");
 
     // test crap
     cpu.ram.dump(0x0000, 0x0020);

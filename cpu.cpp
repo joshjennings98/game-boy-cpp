@@ -21,6 +21,12 @@ CPU::CPU()
     halted = false;
 }
 
+void CPU::loadROM(std::string filename)
+{
+    rom.load(filename);
+    ram.loadROM(rom);
+}
+
 void CPU::set(Registers8 reg, uint8_t value)
 {
     registers[reg] = value;

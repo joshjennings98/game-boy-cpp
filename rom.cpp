@@ -2,7 +2,11 @@
 #include "ram.h"
 #include "rom.h"
 
-ROM::ROM(std::string filename) {
+ROM::ROM() {
+    // Does nothing might remove later
+}
+
+void ROM::load(std::string filename) {
 
     std::cout << "Trying to load " << filename << std::endl;
     

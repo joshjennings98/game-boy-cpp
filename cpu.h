@@ -19,10 +19,12 @@ class CPU {
     public:
         Interrupts interrupts;
         RAM ram;
+        ROM rom;
 
         bool halted;
 
         CPU();
+        void loadROM(std::string filename);
         void set(Registers8 reg, uint8_t value);
         void set(Registers16 reg, uint16_t value);
         void set(Flag flag, bool value);
