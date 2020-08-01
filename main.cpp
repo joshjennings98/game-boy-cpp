@@ -7,8 +7,8 @@
 #include "rom.cpp"
 #include "interrupts.cpp"
 #include "timer.cpp"
-//#include "lcd.cpp"
-//#include "sdl.cpp"
+#include "lcd.cpp"
+#include "sdl.cpp"
 #include "cpu.cpp"
 
 int main() {
