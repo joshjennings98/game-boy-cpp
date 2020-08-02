@@ -17,13 +17,17 @@ class CPU {
         uint16_t programCounter;
         unsigned int cycles;
     public:
-        Interrupts interrupts;
-        RAM ram;
+        Interrupts * interrupts;
+        Timer * timers;
+        LCD * lcd;
+        RAM * ram;
+
+        //RAM ram = RAM(timers, interrupts, lcd);
         ROM rom;
 
         bool halted;
 
-        CPU();
+        CPU(Interrupts * interrupts, Timer * timers, LCD * lcd, RAM * ram);
         void loadROM(std::string filename);
         void set(Registers8 reg, uint8_t value);
         void set(Registers16 reg, uint16_t value);

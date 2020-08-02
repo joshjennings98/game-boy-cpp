@@ -12,12 +12,22 @@
 #include "cpu.cpp"
 
 int main() {
-    CPU cpu;
+    Interrupts interrupts;
+
+    LCD lcd = LCD(&interrupts);
+
+    Timer timers = Timer(&interrupts);
+
+    RAM ram = RAM(&timers, &interrupts, &lcd);
+
+    CPU cpu(&interrupts, &timers, &lcd, &ram);
+
+    std::cout << std::endl;
 
     cpu.loadROM("tetris.gb");
 
     // test crap
-    cpu.ram.dump(0x0000, 0x0020);
+    ram.dump(0x0000, 0x0020);
     /*
 
     Keypad keypad = Keypad();

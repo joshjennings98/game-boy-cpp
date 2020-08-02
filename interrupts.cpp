@@ -1,6 +1,6 @@
 #include <iostream>
 #include "interrupts.h"
-#include "cpu.h"
+//#include "cpu.h"
 
 /*
 void Interrupts::doCycle() {

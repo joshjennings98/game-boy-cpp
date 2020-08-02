@@ -5,11 +5,15 @@
 #include "ram.h"
 #include "interrupts.h"
 #include "sdl.h"
-#include "cpu.h"
+//#include "cpu.h"
+// #include "ram.h"
+
+class RAM;
 
 // LCD Control 
 class LCDC {
-    private:
+    public:
+    //private:
         int lcdDisplay; // 7
         int windowTileMap; // 6
         int windowDisplay; // 5
@@ -18,7 +22,8 @@ class LCDC {
         int spriteSize; // 2
         int spriteDisplay; // 1
         int bgWindowDisplay; // 0
-    public:
+    //public:
+        LCDC();
         void setLCDC(uint8_t value);
         uint8_t getLCDC();
         int getSpriteSize();
@@ -39,6 +44,7 @@ class LCDS {
         int lyFlag;
         int modeFlag;
     public:
+        LCDS();
         void setLCDS(uint8_t value);
         uint8_t getLCDS();
         void setModeFlag(int value);
@@ -63,7 +69,7 @@ class Sprite {
         int getPatternNum();
 };
 
-class LCD : CPU {
+class LCD {
     private:
         int windowX;
         int windowY;
@@ -73,15 +79,18 @@ class LCD : CPU {
         int frame;
         int lyCompare;
 
-        LCDS lcds;
-        LCDC lcdc;
-
-        //CPU * cpu;
+        // CPU * cpu;
         //Interrupts * interrupts;
         Display * display;
         Keypad * keypad;
     public:
-        LCD();
+        LCDS lcds;
+        LCDC lcdc;
+
+        //RAM * ram;
+        Interrupts * interrupts;
+        
+        LCD(/* RAM * ram, */ Interrupts * interrupts);
 
         Keypad * getKeyPad();
         Display * getDisplay();
@@ -100,11 +109,11 @@ class LCD : CPU {
         uint8_t getWindowX();
         uint8_t getWindowY();
         int getLine();
-        int lcdCycle(int timeStart);
+        int lcdCycle(int timeStart, RAM * ram);
 
-        void renderLine(int line);
-        void drawBgWindow(unsigned int *buf, int line);
-        void drawSprites(unsigned int *buf, int line, int blocks, std::vector<Sprite> sprites);
+        void renderLine(int line, RAM * ram);
+        void drawBgWindow(unsigned int *buf, int line, RAM * ram);
+        void drawSprites(unsigned int *buf, int line, int blocks, std::vector<Sprite> sprites, RAM * ram);
         std::vector<Sprite> sortSprites(std::vector<Sprite> sprites, int c);
         void draw_stuff();
 };

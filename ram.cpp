@@ -5,9 +5,14 @@
 #include <fstream>
 #include "ram.h"
 #include "rom.h"
+#include "lcd.h"
 
-RAM::RAM()
+RAM::RAM(Timer * timers, Interrupts * interrupts, LCD * lcd)
 {
+    this->timers = timers;
+    this->interrupts = interrupts;
+    this->lcd = lcd;
+
     // Make sure initisalised to zero
     rom00.fill(0x0);
     rom01.fill(0x0);
@@ -39,6 +44,8 @@ RAM::RAM()
     writeByte(0xFF47, 0xFC);
     writeByte(0xFF48, 0xFF);
     writeByte(0xFF49, 0xFF);
+
+    std::cout << "Power up RAM initialised" << std::endl;
 }
 
 uint8_t RAM::readByte(uint16_t addr)
@@ -73,25 +80,25 @@ uint8_t RAM::readByte(uint16_t addr)
         }
         // return 0xC0 | (0xF ^ mask) | (dPadButtons | dPadDirections);
     } else if (addr == 0xFF04) {
-        // return Div
+        return timers->getDiv();
     } else if (addr == 0xFF05) {
-        // return Tima
+        return timers->getTima();
     } else if (addr == 0xFF06) {
-        // return Tma
+        return timers->getTma();
     } else if (addr == 0xFF04) {
-        // return Tac
+        return timers->getTac();
     } else if (addr == 0xFF0F) {
-        // return interrupt flags
+        return interrupts->getFlags();
     } else if (addr == 0xFF40) {
-        // return LCDC
+        return lcd->lcdc.getLCDC();
     } else if (addr == 0xFF41) {
-        // return LCDS
+        return lcd->lcds.getLCDS();
     } else if (addr == 0xFF42) {
-        // return scroll y
+        return lcd->getScrollY();
     } else if (addr == 0xFF43) {
-        // return scroll x
+        return lcd->getScrollY();
     } else if (addr == 0xFF44) {
-        // return get line
+        return lcd->getLine();
     } else if (0xFF00 <= addr && addr < 0xFF80) {
         return io[addr - 0xFF00];
     } else if (0xFF80 <= addr && addr < 0xFFFF) {
@@ -128,36 +135,37 @@ void RAM::writeByte(uint16_t addr, uint8_t value)
     } else if (0xFEA0 <= addr && addr < 0xFF00) {
         // 0xFEA0 - 0xFF00 is unusable
     } else if (addr == 0xFF04) { 
-        // set Div to value
+        timers->setDiv(value);
     } else if (addr == 0xFF05) { 
-        // set Tima to value
+        timers->setTima(value);
     } else if (addr == 0xFF06) { 
-        // set Tma to value
+        timers->setTma(value);
     } else if (addr == 0xFF04) { 
-        // set Tac to value
+        timers->setTac(value);
     } else if (addr == 0xFF40) { 
-        // set LCDC to value
+        //std::cout << 3 << std::endl;
+        lcd->lcdc.setLCDC(value);
     } else if (addr == 0xFF41) { 
-        // set LCDS to value
+        lcd->lcds.setLCDS(value);
     } else if (addr == 0xFF42) { 
-        // set Scroll Y to value
+        lcd->setScrollY(value);
     } else if (addr == 0xFF43) { 
-        // set Scroll X to value
+        lcd->setScrollX(value);
     } else if (addr == 0xFF45) { 
-        // set Ly Compare to value
+        lcd->setLyCompare(value);
     } else if(addr == 0xFF46) { 
         // Direct memory access for OAM
         copyToOAM(0xfe00, value << 8, 160);
     } else if (addr == 0xFF47) { 
-        // set BG Palette to value
+        lcd->setBGPalette(value);
     } else if (addr == 0xFF48) { 
-        // set Sprite Palette 1 to value
+        lcd->setSpritePalette1(value);
     } else if (addr == 0xFF49) { 
-        // set Sprite Palette 2 to value
+        lcd->setSpritePalette2(value);
     } else if (addr == 0xFF4A) { 
-        // set Window Y to value
+        lcd->setWindowY(value);
     } else if (addr == 0xFF4B) {
-        // set Window X to value
+        lcd->setWindowX(value);
     } else if (addr == 0xFF00) {
         dPadDirections = value & 0x10;
         dPadButtons = value & 0x20;

@@ -1,9 +1,11 @@
 #include <iostream>
 #include <vector>
+#include "cpu.h"
 #include "lcd.h"
 #include "ram.h"
 #include "interrupts.h"
 #include "sdl.h"
+#include "ram.h"
 
 int bgPalette[] = {3,2,1,0};
 int spritePalette1[] = {0, 1, 2, 3};
@@ -52,14 +54,40 @@ int Sprite::getPatternNum()
 }
 
 
-LCD::LCD(/* CPU * cpu */)
+LCD::LCD(/* RAM * ram, */ Interrupts * interrupts)
 {
-    lcdc = LCDC();
-    lcds = LCDS();
+    //lcdc = LCDC();
+    //lcds = LCDS();
+
     //this->cpu = cpu;
+    //this->ram = ram;
+    this->interrupts = interrupts;
+    std::cout << "LCD inited" << std::endl;
 }
 
-void LCDC::setLCDC(unsigned char address) {
+LCDC::LCDC() {
+    lcdDisplay = 0; // 7
+    windowTileMap = 0; // 6
+    windowDisplay = 0; // 5
+    tileDataSelect = 0; // 4
+    tileMapSelect = 0; // 3
+    spriteSize = 0; // 2
+    spriteDisplay = 0; // 1
+    bgWindowDisplay = 0; // 0
+    std::cout << "LCDC inited" << lcdDisplay << std::endl;
+}
+
+LCDS::LCDS() {
+    lyInterrupt = 0;
+    oamInterrupt = 0;
+    vblankInterrupt = 0;
+    hblankInterrupt = 0;
+    lyFlag = 0;
+    modeFlag = 0;
+    std::cout << "LCDS inited" << std::endl;
+}
+
+void LCDC::setLCDC(uint8_t address) {
     lcdDisplay = (!!(address & 0x80));
     windowTileMap = (!!(address & 0x40));
     windowDisplay = (!!(address & 0x20));
@@ -70,7 +98,7 @@ void LCDC::setLCDC(unsigned char address) {
     bgWindowDisplay = (!!(address & 0x01));
 }
 
-unsigned char LCDC::getLCDC(void) {
+uint8_t LCDC::getLCDC(void) {
     return (
         (lcdDisplay << 7) | 
         (windowTileMap << 6) | 
@@ -82,7 +110,7 @@ unsigned char LCDC::getLCDC(void) {
         (bgWindowDisplay));
 }
 
-void LCDS::setLCDS(unsigned char address) {
+void LCDS::setLCDS(uint8_t address) {
     lyInterrupt = (!!(address & 0x40));
     oamInterrupt = ((address & 0x20) >> 5);
     vblankInterrupt = ((address & 0x10) >> 4);
@@ -101,7 +129,7 @@ int LCDS::getLyInterrupt()
     return lyInterrupt;
 }
 
-unsigned char LCDS::getLCDS(void) {
+uint8_t LCDS::getLCDS(void) {
     return (
         (lyInterrupt << 6) | 
         (oamInterrupt << 5) | 
@@ -111,48 +139,48 @@ unsigned char LCDS::getLCDS(void) {
         (modeFlag));
 }
 
-void setBGPalette(unsigned char address) {
+void LCD::setBGPalette(uint8_t address) {
     bgPalette[3] = ((address >> 6) & 0x03);
     bgPalette[2] = ((address >> 4) & 0x03);
     bgPalette[1] = ((address >> 2) & 0x03);
     bgPalette[0] = ((address) & 0x03);
 }
 
-void setSpritePalette1(unsigned char address) {
+void LCD::setSpritePalette1(uint8_t address) {
     spritePalette1[3] = ((address >> 6) & 0x03);
     spritePalette1[2] = ((address >> 4) & 0x03);
     spritePalette1[1] = ((address >> 2) & 0x03);
     spritePalette1[0] = 0;
 }
 
-void setSpritePalette2(unsigned char address) {
+void LCD::setSpritePalette2(uint8_t address) {
     spritePalette2[3] = ((address >> 6) & 0x03);
     spritePalette2[2] = ((address >> 4) & 0x03);
     spritePalette2[1] = ((address >> 2) & 0x03);
     spritePalette2[0] = 0;
 }
 
-void LCD::setScrollX(unsigned char address) {
+void LCD::setScrollX(uint8_t address) {
     scrollX = address;
 }
 
-unsigned char LCD::getScrollX(void) {
+uint8_t LCD::getScrollX(void) {
     return scrollX;
 }
 
-void LCD::setScrollY(unsigned char address) {
+void LCD::setScrollY(uint8_t address) {
     scrollY = address;
 }
 
-unsigned char LCD::getScrollY(void) {
+uint8_t LCD::getScrollY(void) {
     return scrollY;
 }
 
-void LCD::setWindowX(unsigned char address) {
+void LCD::setWindowX(uint8_t address) {
     windowX = address;
 }
 
-void LCD::setWindowY(unsigned char address) {
+void LCD::setWindowY(uint8_t address) {
     windowY = address;
 }
 
@@ -160,7 +188,7 @@ int LCD::getLine(void) {
     return line;
 }
 
-void LCD::setLyCompare(unsigned char address) {
+void LCD::setLyCompare(uint8_t address) {
     lyCompare = (line == address);
 }
 
@@ -208,12 +236,12 @@ int LCDC::getBgWindowDisplay()
     return bgWindowDisplay;
 }
 
-void LCD::drawBgWindow(unsigned int *buf, int line) {
+void LCD::drawBgWindow(unsigned int *buf, int line, RAM * ram) {
 	int x;
 	for(x = 0; x < 160; x++) // for the x size of the window (160x144)
 	{
 		unsigned int mapSelect, tileMapOffset, tileNum, tileAddr, currX, currY;
-        unsigned char buf1, buf2, mask, colour;
+        uint8_t buf1, buf2, mask, colour;
 
 		if(line >= windowY && lcdc.getWindowDisplay() && line - windowY < 144) {
 			currX = x;
@@ -234,14 +262,14 @@ void LCD::drawBgWindow(unsigned int *buf, int line) {
         // map window to 32 rows of 32 bytes
 		tileMapOffset = (currY/8)*32 + currX/8;
 
-		tileNum = ram.readByte(0x9800 + mapSelect*0x400 + tileMapOffset);
+		tileNum = ram->readByte(0x9800 + mapSelect*0x400 + tileMapOffset);
 		if(lcdc.getTileDataSelect())
 			tileAddr = 0x8000 + (tileNum*16);
 		else
 			tileAddr = 0x9000 + (((signed int)tileNum)*16); // pattern 0 lies at 0x9000
 
-		buf1 = ram.readByte(tileAddr + (currY%8)*2); // 2 bytes represent the line
-		buf2 = ram.readByte(tileAddr + (currY%8)*2 + 1);
+		buf1 = ram->readByte(tileAddr + (currY%8)*2); // 2 bytes represent the line
+		buf2 = ram->readByte(tileAddr + (currY%8)*2 + 1);
 		mask = 128>>(currX%8);
 		colour = (!!(buf2&mask)<<1) | !!(buf1&mask);
 		buf[line*160 + x] = colours[bgPalette[colour]];
@@ -253,7 +281,7 @@ int LCDC::getSpriteSize()
     return spriteSize;
 }
 
-void LCD::drawSprites(unsigned int *buf, int line, int blocks, std::vector<Sprite> sprites) {
+void LCD::drawSprites(unsigned int *buf, int line, int blocks, std::vector<Sprite> sprites, RAM * ram) {
 	
     int i;
 	for(i = 0; i < blocks; i++)
@@ -272,8 +300,8 @@ void LCD::drawSprites(unsigned int *buf, int line, int blocks, std::vector<Sprit
         // similar to background
 		tileAddr = 0x8000 + (sprites[i].getPatternNum()*16) + spriteRow*2;
 
-		buf1 = ram.readByte(tileAddr);
-		buf2 = ram.readByte(tileAddr+1);
+		buf1 = ram->readByte(tileAddr);
+		buf2 = ram->readByte(tileAddr+1);
 
 		// draw each pixel
 		for(x = 0; x < 8; x++)
@@ -283,7 +311,7 @@ void LCD::drawSprites(unsigned int *buf, int line, int blocks, std::vector<Sprit
 				continue;
             }
 
-			unsigned char mask, colour;
+			uint8_t mask, colour;
 			int *pal;
 
             if((sprites[i].getX() + x) >= 160)
@@ -311,7 +339,7 @@ void LCD::drawSprites(unsigned int *buf, int line, int blocks, std::vector<Sprit
 	}
 }
 
-void LCD::renderLine(int line) {
+void LCD::renderLine(int line, RAM * ram) {
 
     int i = 0; // num of OAM blocks
     int c = 0; // block counter
@@ -324,15 +352,15 @@ void LCD::renderLine(int line) {
     for (i = 0; i < 40; i++) {
 
         int y;
-        y = ram.readByte(0xFE00 + (i*4)) - 16;
+        y = ram->readByte(0xFE00 + (i*4)) - 16;
 
         if (line < y || line >= y + 8 + (8*lcdc.getSpriteSize())) // out of bounds check
             continue;
 
         sprites[c].setY(y);
-        sprites[c].setX(ram.readByte(0xFE00 + (i*4) + 1) - 8);
-        sprites[c].setPatternNum(ram.readByte(0xFE00 + (i*4) + 2));
-        sprites[c].setFlags(ram.readByte(0xFE00 + (i*4) + 3));
+        sprites[c].setX(ram->readByte(0xFE00 + (i*4) + 1) - 8);
+        sprites[c].setPatternNum(ram->readByte(0xFE00 + (i*4) + 2));
+        sprites[c].setFlags(ram->readByte(0xFE00 + (i*4) + 3));
         c++;
         // max 10 sprites per line
         if (c == 10)
@@ -342,8 +370,8 @@ void LCD::renderLine(int line) {
     if (c)
         sortSprites(sprites, c);
 
-    drawBgWindow(buf, line);
-    drawSprites(buf, line, c, sprites);
+    drawBgWindow(buf, line, ram);
+    drawSprites(buf, line, c, sprites, ram);
 }
 
 Keypad * LCD::getKeyPad()
@@ -356,7 +384,7 @@ Display * LCD::getDisplay()
     return display;
 }
 
-int LCD::lcdCycle(int timeStart) {
+int LCD::lcdCycle(int timeStart, RAM * ram) {
     int cycles = 0; //getCycles();
     static int prevLine;
 
@@ -378,16 +406,16 @@ int LCD::lcdCycle(int timeStart) {
         lcds.setModeFlag(1);  // VBlank
 
     if (line != prevLine && line < 144) {
-        renderLine(line);
+        renderLine(line, ram);
     }
 
     if (lcds.getLyInterrupt() && line == lyCompare) {
-        interrupts.updateFlags(lcdstat);
+        interrupts->updateFlags(lcdstat);
     }
 
     if (prevLine == 143 && line == 144) {
         // draw the entire frame
-        interrupts.updateFlags(vblank);
+        interrupts->updateFlags(vblank);
         getDisplay()->sdlSetFrame();
         SDL_Event e;
         

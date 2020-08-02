@@ -4,11 +4,16 @@
 #include "interrupts.h"
 #include "ram.h"
 
-CPU::CPU()
+CPU::CPU(Interrupts * interrupts, Timer * timers, LCD * lcd, RAM * ram)
 {
-    interrupts.set(Master, 1);
-    interrupts.set(Enable, 0);
-    interrupts.set(Flags, 0);
+    this->ram = ram;
+    this->interrupts = interrupts;
+    this->timers = timers;
+    this->lcd = lcd;
+
+    interrupts->set(Master, 1);
+    interrupts->set(Enable, 0);
+    interrupts->set(Flags, 0);
 
     set(AF, 0x01B0);
   	set(BC, 0x0013);
@@ -24,7 +29,7 @@ CPU::CPU()
 void CPU::loadROM(std::string filename)
 {
     rom.load(filename);
-    ram.loadROM(rom);
+    ram->loadROM(rom);
 }
 
 void CPU::set(Registers8 reg, uint8_t value)
@@ -104,49 +109,49 @@ void CPU::cpuInterrupt(uint16_t address)
 {
     uint16_t sp = get(SP), pc = get(PC);
     
-    interrupts.set(Master, 0);
+    interrupts->set(Master, 0);
     set(SP, sp - 2);
-    ram.writeWord(sp - 2, pc);
+    ram->writeWord(sp - 2, pc);
     set(PC, address);
 }
 
 void CPU::interruptCycle() {
-    uint8_t master = interrupts.get(Master);
-    uint8_t enable = interrupts.get(Enable);
-    uint8_t pending = interrupts.get(Pending);
-    uint8_t flags = interrupts.get(Flags);
+    uint8_t master = interrupts->get(Master);
+    uint8_t enable = interrupts->get(Enable);
+    uint8_t pending = interrupts->get(Pending);
+    uint8_t flags = interrupts->get(Flags);
 
     if (pending == 1) {
-        interrupts.set(Pending, 0);
+        interrupts->set(Pending, 0);
     } else if (master && enable && flags) {
 
         if (enable & flags & vblank) {
             flags &= ~vblank; // turn off specific flag
-            interrupts.set(Flags, flags);
+            interrupts->set(Flags, flags);
             cpuInterrupt(0x40);
         }
 
         if (enable & flags & lcdstat) {
             flags &= ~lcdstat;
-            interrupts.set(Flags, flags);
+            interrupts->set(Flags, flags);
             cpuInterrupt(0x48);
         }
 
         if (enable & flags & timer) {
             flags &= ~timer;
-            interrupts.set(Flags, flags);
+            interrupts->set(Flags, flags);
             cpuInterrupt(0x50);
         }
         
         if (enable & flags & serial) {
             flags &= ~serial;
-            interrupts.set(Flags, flags);
+            interrupts->set(Flags, flags);
             cpuInterrupt(0x58);
         }
 
         if (enable & flags & joypad) {
             flags &= ~joypad;
-            interrupts.set(Flags, flags);
+            interrupts->set(Flags, flags);
             cpuInterrupt(0x60);
         }
     }
@@ -189,7 +194,7 @@ void CPU::cpuCycle()
     uint16_t t;
     unsigned int u;
     uint16_t pc = get(PC);
-    uint8_t instruction = ram.readByte(pc);
+    uint8_t instruction = ram->readByte(pc);
 
     switch (instruction) {
         case 0x00: // NOP
@@ -197,12 +202,12 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x01: // LD BC,nn
-            set(BC, ram.readWord(pc + 1));
+            set(BC, ram->readWord(pc + 1));
             increment(PC, 3);
             cycles += 3;
             break;
         case 0x02: // LD (BC),A
-            ram.writeByte(get(BC), get(A));
+            ram->writeByte(get(BC), get(A));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -228,7 +233,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x06: // LD B,n
-            set(B, ram.readByte(pc + 1));
+            set(B, ram->readByte(pc + 1));
             increment(PC, 2);
             cycles += 2;
             break;
@@ -244,7 +249,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x08: // LD (nn),SP
-            ram.writeWord(ram.readWord(pc + 1), get(SP));
+            ram->writeWord(ram->readWord(pc + 1), get(SP));
             increment(PC, 3);
             cycles += 5;
             break;
@@ -258,7 +263,7 @@ void CPU::cpuCycle()
             cycles += 2;
             break;
         case 0x0A: // LD A,(BC)
-            set(A, ram.readByte(get(BC)));
+            set(A, ram->readByte(get(BC)));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -284,7 +289,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x0E: // LD C,n
-            set(C, ram.readByte(pc + 1));
+            set(C, ram->readByte(pc + 1));
             increment(PC, 2);
             cycles += 2;
             break;
@@ -304,12 +309,12 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x11: // LD DE,nn
-            set(DE, ram.readWord(pc + 1));
+            set(DE, ram->readWord(pc + 1));
             increment(PC, 3);
             cycles += 3;
             break;
         case 0x12: // LD (DE),A
-            ram.writeByte(get(DE), get(A));
+            ram->writeByte(get(DE), get(A));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -335,7 +340,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x16: // LD D,n
-            set(D, ram.readByte(pc + 1));
+            set(D, ram->readByte(pc + 1));
             increment(PC, 2);
             cycles += 2;
             break;
@@ -350,7 +355,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x18: // JP n
-            increment(PC, (signed char)ram.readByte(pc + 1) + 2);
+            increment(PC, (signed char)ram->readByte(pc + 1) + 2);
             cycles += 3;
             break;
         case 0x19: // ADD HL,DE
@@ -363,7 +368,7 @@ void CPU::cpuCycle()
             cycles += 2;
             break;
         case 0x1A: // LD A,(DE)
-            set(A, ram.readByte(get(DE)));
+            set(A, ram->readByte(get(DE)));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -389,7 +394,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x1E: // LD E,n
-            set(E, ram.readByte(pc + 1));
+            set(E, ram->readByte(pc + 1));
             increment(PC, 2);
             cycles += 2;
             break;
@@ -405,7 +410,7 @@ void CPU::cpuCycle()
             break;
         case 0x20: // JP NZ
             if (get(Zero) == 0) {
-              increment(PC, (signed char)ram.readByte(pc + 1) + 2);
+              increment(PC, (signed char)ram->readByte(pc + 1) + 2);
               cycles += 3;
             } else {
               increment(PC, 2);
@@ -413,12 +418,12 @@ void CPU::cpuCycle()
             }
             break;
         case 0x21: // LD HL,nn
-            set(HL, ram.readWord(pc + 1));
+            set(HL, ram->readWord(pc + 1));
             increment(PC, 3);
             cycles += 3;
             break;
         case 0x22: // LDI (HL), A
-            ram.writeByte(get(HL),get(A));
+            ram->writeByte(get(HL),get(A));
             set(HL, (get(HL) + 1));
             increment(PC, 1);
             cycles += 2;
@@ -445,7 +450,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x26: // LD H,n
-            set(H, ram.readByte(pc + 1));
+            set(H, ram->readByte(pc + 1));
             increment(PC, 2);
             cycles += 2;
             break;
@@ -471,7 +476,7 @@ void CPU::cpuCycle()
             break;
         case 0x28: // JP Z
             if (get(Zero) == 1) {
-              increment(PC, (signed char)ram.readByte(pc + 1) + 2);
+              increment(PC, (signed char)ram->readByte(pc + 1) + 2);
               cycles += 3;
             } else {
               increment(PC, 2);
@@ -488,7 +493,7 @@ void CPU::cpuCycle()
             cycles += 2;
             break;
         case 0x2A: // LDI A,(HL)
-            set(A, ram.readByte(get(HL)));
+            set(A, ram->readByte(get(HL)));
             set(HL, (get(HL) + 1));
             increment(PC, 1);
             cycles += 2;
@@ -515,7 +520,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x2E: // LD L,n
-            set(L, ram.readByte(pc + 1));
+            set(L, ram->readByte(pc + 1));
             increment(PC, 2);
             cycles += 2;
             break;
@@ -528,7 +533,7 @@ void CPU::cpuCycle()
             break;
         case 0x30: // JP NC
             if (get(Carry) == 0) {
-              increment(PC, (signed char)ram.readByte(pc + 1) + 2);
+              increment(PC, (signed char)ram->readByte(pc + 1) + 2);
               cycles += 3;
             } else {
               increment(PC, 2);
@@ -536,13 +541,13 @@ void CPU::cpuCycle()
             }
             break;
         case 0x31: // LD SP,nn
-            set(SP, ram.readWord(pc + 1));
+            set(SP, ram->readWord(pc + 1));
             increment(PC, 3);
             cycles += 3;
             break;
         case 0x32: // LDD (HL), A
             t = get(HL);
-            ram.writeByte(t,get(A));
+            ram->writeByte(t,get(A));
             set(HL, (t - 1));
             increment(PC, 1);
             cycles += 2;
@@ -553,8 +558,8 @@ void CPU::cpuCycle()
             cycles += 2;
             break;
         case 0x34: // INC (HL)
-            s = ram.readByte(get(HL)) + 1;
-            ram.writeByte(get(HL), s);
+            s = ram->readByte(get(HL)) + 1;
+            ram->writeByte(get(HL), s);
             set(Zero, !s);
             set(Subtract, 0);
             set(HalfCarry, ((s & 0xF) < ((s-1) & 0xF)));
@@ -562,8 +567,8 @@ void CPU::cpuCycle()
             cycles += 3;
             break;
         case 0x35: // DEC (HL)
-            s = ram.readByte(get(HL)) - 1;
-            ram.writeByte(get(HL), s);
+            s = ram->readByte(get(HL)) - 1;
+            ram->writeByte(get(HL), s);
             set(Zero, !s);
             set(Subtract, 1);
             set(HalfCarry, ((s & 0xF) == 0xF));
@@ -571,7 +576,7 @@ void CPU::cpuCycle()
             cycles += 3;
             break;
         case 0x36: // LD (HL),n
-            ram.writeByte(get(HL), ram.readByte(pc + 1));
+            ram->writeByte(get(HL), ram->readByte(pc + 1));
             increment(PC, 2);
             cycles += 3;
             break;
@@ -584,7 +589,7 @@ void CPU::cpuCycle()
             break;
         case 0x38: // JP C
             if (get(Carry) == 1) {
-              increment(PC, (signed char)ram.readByte(pc + 1) + 2);
+              increment(PC, (signed char)ram->readByte(pc + 1) + 2);
               cycles += 3;
             } else {
               increment(PC, 2);
@@ -601,7 +606,7 @@ void CPU::cpuCycle()
             cycles += 2;
             break;
         case 0x3A: // LDD A, (HL)
-            set(A, ram.readByte(get(HL)));
+            set(A, ram->readByte(get(HL)));
             set(HL, get(HL) - 1);
             increment(PC, 1);
             cycles += 2;
@@ -628,7 +633,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x3E: // LD A,n
-            set(A, ram.readByte(pc + 1));
+            set(A, ram->readByte(pc + 1));
             increment(PC, 2);
             cycles += 2;
             break;
@@ -670,7 +675,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x46: // LD B,(HL)
-            set(B, ram.readByte(get(HL)));
+            set(B, ram->readByte(get(HL)));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -710,7 +715,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x4E: // LD C,(HL)
-            set(C, ram.readByte(get(HL)));
+            set(C, ram->readByte(get(HL)));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -750,7 +755,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x56: // LD D,(HL)
-            set(D, ram.readByte(get(HL)));
+            set(D, ram->readByte(get(HL)));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -790,7 +795,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x5E: // LD E,(HL)
-            set(E, ram.readByte(get(HL)));
+            set(E, ram->readByte(get(HL)));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -830,7 +835,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x66: // LD H,(HL)
-            set(H, ram.readByte(get(HL)));
+            set(H, ram->readByte(get(HL)));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -870,7 +875,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x6E: // LD L,(HL)
-            set(L, ram.readByte(get(HL)));
+            set(L, ram->readByte(get(HL)));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -880,32 +885,32 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x70: // LD (HL),B
-            ram.writeByte(get(HL), get(B));
+            ram->writeByte(get(HL), get(B));
             increment(PC, 1);
             cycles += 2;
             break;
         case 0x71: // LD (HL),C
-            ram.writeByte(get(HL), get(C));
+            ram->writeByte(get(HL), get(C));
             increment(PC, 1);
             cycles += 2;
             break;
         case 0x72: // LD (HL),D
-            ram.writeByte(get(HL), get(D));
+            ram->writeByte(get(HL), get(D));
             increment(PC, 1);
             cycles += 2;
             break;
         case 0x73: // LD (HL),E
-            ram.writeByte(get(HL), get(E));
+            ram->writeByte(get(HL), get(E));
             increment(PC, 1);
             cycles += 2;
             break;
         case 0x74: // LD (HL),H
-            ram.writeByte(get(HL), get(H));
+            ram->writeByte(get(HL), get(H));
             increment(PC, 1);
             cycles += 2;
             break;
         case 0x75: // LD (HL),L
-            ram.writeByte(get(HL), get(L));
+            ram->writeByte(get(HL), get(L));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -915,7 +920,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x77: // LD (HL),A
-            ram.writeByte(get(HL), get(A));
+            ram->writeByte(get(HL), get(A));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -950,7 +955,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x7E: // LD A,(HL)
-            set(A, ram.readByte(get(HL)));
+            set(A, ram->readByte(get(HL)));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -1020,7 +1025,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x86: // ADD A,(HL)
-            i = get(A) + ram.readByte(get(HL));
+            i = get(A) + ram->readByte(get(HL));
             set(Zero, !i);
             set(Subtract, 0);
             set(HalfCarry, ((i & 0xF) < (get(A) & 0xF)));
@@ -1100,7 +1105,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x8E: // ADC A,(HL)
-            s = ram.readByte(get(HL));
+            s = ram->readByte(get(HL));
             i = ((get(A) + s + get(Carry)) >= 0x100);
 			set(Subtract, 0);
 			set(HalfCarry, (((get(A)&0xF) + (s&0xF) + get(Carry)) >= 0x10));
@@ -1181,7 +1186,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x96: // SUB A,(HL)
-            i = get(A) - ram.readByte(get(HL));
+            i = get(A) - ram->readByte(get(HL));
             set(Zero, !i);
             set(Subtract, 1);
             set(HalfCarry, ((i & 0xF) > (get(A) & 0xF)));
@@ -1261,7 +1266,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0x9E: // SBC A,(HL)
-            s = ram.readByte(get(HL));
+            s = ram->readByte(get(HL));
             i = get(Carry) + s;
             set(HalfCarry, (((get(A)&0xF) - (s&0xF) - get(Carry)) < 0));
 			set(Carry, ((get(A) - s - get(Carry)) < 0));
@@ -1336,7 +1341,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0xA6: // AND A,(HL)
-            set(A, A & ram.readByte(get(HL)));
+            set(A, A & ram->readByte(get(HL)));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1408,7 +1413,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0xAE: // XOR A,(HL)
-            set(A, A ^ ram.readByte(get(HL)));
+            set(A, A ^ ram->readByte(get(HL)));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1480,7 +1485,7 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0xB6: // OR A,(HL)
-            set(A, A | ram.readByte(get(HL)));
+            set(A, A | ram->readByte(get(HL)));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1546,10 +1551,10 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0xBE: // CP (HL)
-            set(Zero, (get(A) == ram.readByte(get(HL))));
+            set(Zero, (get(A) == ram->readByte(get(HL))));
             set(Subtract, 1);
-            set(HalfCarry, (((get(A) - ram.readByte(get(HL))) & 0xF) > (get(A) & 0xF)));
-            set(Carry, (get(A) < ram.readByte(get(HL))));
+            set(HalfCarry, (((get(A) - ram->readByte(get(HL))) & 0xF) > (get(A) & 0xF)));
+            set(Carry, (get(A) < ram->readByte(get(HL))));
             increment(PC, 1);
             cycles += 2;
             break;
@@ -1563,7 +1568,7 @@ void CPU::cpuCycle()
             break;
         case 0xC0: // RET NZ
             if (get(Zero) == 0) {
-                set(PC, ram.readWord(get(SP)));
+                set(PC, ram->readWord(get(SP)));
                 increment(SP, 2);
                 cycles += 5;
             } else {
@@ -1572,7 +1577,7 @@ void CPU::cpuCycle()
             }
             break;
         case 0xC1: // POP BC
-            t = ram.readWord(get(SP));
+            t = ram->readWord(get(SP));
             set(BC, t);
             increment(SP, 2);
             increment(PC, 1);
@@ -1580,7 +1585,7 @@ void CPU::cpuCycle()
             break;
         case 0xC2: // JP NZ,nn
             if (get(Zero) == 0) {
-                set(PC, ram.readWord(pc + 1));
+                set(PC, ram->readWord(pc + 1));
                 cycles += 4;
             } else {
                 increment(PC, 3);
@@ -1588,14 +1593,14 @@ void CPU::cpuCycle()
             }
             break;
         case 0xC3: // JP nn
-            set(PC, ram.readWord(pc + 1));
+            set(PC, ram->readWord(pc + 1));
             cycles += 4;
             break;
         case 0xC4: // CALL NZ,nn
             if (get(Zero) == 0) {
                 decrement(SP, 2);
-                ram.writeWord(get(SP), get(PC) + 3);
-                set(PC, ram.readWord(pc + 1));
+                ram->writeWord(get(SP), get(PC) + 3);
+                set(PC, ram->readWord(pc + 1));
                 cycles += 6;
             } else {
                 increment(PC, 3);
@@ -1604,12 +1609,12 @@ void CPU::cpuCycle()
             break;
         case 0xC5: // PUSH BC
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(BC));
+            ram->writeWord(get(SP), get(BC));
             increment(PC, 1);
             cycles += 4;
             break;
         case 0xC6: // ADD A,n
-            i = get(A) + ram.readByte(pc + 1);
+            i = get(A) + ram->readByte(pc + 1);
             set(Zero, !i);
             set(Subtract, 0);
             set(HalfCarry, ((i & 0xF) < (get(A) & 0xF)));
@@ -1620,13 +1625,13 @@ void CPU::cpuCycle()
             break;
         case 0xC7: // RST 00
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(PC) + 1);
+            ram->writeWord(get(SP), get(PC) + 1);
             set(PC, 0x00);
             cycles += 4;
             break;
         case 0xC8: // RET Z
             if (get(Zero) == 1) {
-                set(PC, ram.readWord(get(SP)));
+                set(PC, ram->readWord(get(SP)));
                 increment(SP, 2);
                 cycles += 5;
             } else {
@@ -1635,13 +1640,13 @@ void CPU::cpuCycle()
             }
             break;
         case 0xC9: // RET
-            set(PC, ram.readWord(get(SP)));
+            set(PC, ram->readWord(get(SP)));
             increment(SP, 2);
             cycles += 4;
             break;
         case 0xCA: // JP Z,nn
             if (get(Zero) == 1) {
-                set(PC, ram.readWord(pc + 1));
+                set(PC, ram->readWord(pc + 1));
                 cycles += 4;
             } else {
                 increment(PC, 3);
@@ -1649,15 +1654,15 @@ void CPU::cpuCycle()
             }
             break;
         case 0xCB: // Prefix
-            cbPrefix(ram.readByte(pc + 1));
+            cbPrefix(ram->readByte(pc + 1));
             increment(PC, 2);
             cycles += 2;
             break;
         case 0xCC: // CALL Z,nn
             if (get(Zero) == 1) {
                 decrement(SP, 2);
-                ram.writeWord(get(SP), get(PC) + 3);
-                set(PC, ram.readWord(pc + 1));
+                ram->writeWord(get(SP), get(PC) + 3);
+                set(PC, ram->readWord(pc + 1));
                 cycles += 6;
             } else {
                 increment(PC, 3);
@@ -1666,12 +1671,12 @@ void CPU::cpuCycle()
             break;
         case 0xCD: // CALL n
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(PC) + 3);
-            set(PC, ram.readWord(pc + 1));
+            ram->writeWord(get(SP), get(PC) + 3);
+            set(PC, ram->readWord(pc + 1));
             cycles += 6;
             break;
         case 0xCE: // ADC A,
-            s = ram.readByte(pc + 1);
+            s = ram->readByte(pc + 1);
             i = get(A) + s + get(Carry) >= 0x100;
             set(Subtract, 0);
             set(HalfCarry, (((get(A) + s + get(Carry)) & 0xF) < (get(A) & 0xF)));
@@ -1683,13 +1688,13 @@ void CPU::cpuCycle()
             break;
         case 0xCF: // RST 08
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(PC) + 1);
+            ram->writeWord(get(SP), get(PC) + 1);
             set(PC, 0x08);
             cycles += 4;
             break;
         case 0xD0: // RET NC
             if (get(Carry) == 0) {
-                set(PC, ram.readWord(get(SP)));
+                set(PC, ram->readWord(get(SP)));
                 increment(SP, 2);
                 cycles += 5;
             } else {
@@ -1698,14 +1703,14 @@ void CPU::cpuCycle()
             }
             break;
         case 0xD1: // POP DE
-            set(DE, ram.readWord(get(SP)));
+            set(DE, ram->readWord(get(SP)));
             increment(SP, 2);
             increment(PC, 1);
             cycles += 3;
             break;
         case 0xD2: // JP NC,nn
             if (get(Carry) == 0) {
-                set(PC, ram.readWord(pc + 1));
+                set(PC, ram->readWord(pc + 1));
                 cycles += 4;
             } else {
                 increment(PC, 3);
@@ -1715,8 +1720,8 @@ void CPU::cpuCycle()
         case 0xD4: // CALL NC,nn
             if (get(Carry) == 0) {
                 decrement(SP, 2);
-                ram.writeWord(get(SP), get(PC) + 3);
-                set(PC, ram.readWord(pc + 1));
+                ram->writeWord(get(SP), get(PC) + 3);
+                set(PC, ram->readWord(pc + 1));
                 cycles += 6;
             } else {
                 increment(PC, 3);
@@ -1725,12 +1730,12 @@ void CPU::cpuCycle()
             break;
         case 0xD5: // PUSH DE
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(DE));
+            ram->writeWord(get(SP), get(DE));
             increment(PC, 1);
             cycles += 3;
             break;
         case 0xD6: // SUB A,n
-            i = get(A) - ram.readByte(pc + 1);
+            i = get(A) - ram->readByte(pc + 1);
             set(Zero, !i);
             set(Subtract, 1);
             set(HalfCarry, ((i & 0xF) > (get(A) & 0xF)));
@@ -1741,13 +1746,13 @@ void CPU::cpuCycle()
             break;
         case 0xD7: // RST 10
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(PC) + 1);
+            ram->writeWord(get(SP), get(PC) + 1);
             set(PC, 0x10);
             cycles += 4;
             break;
         case 0xD8: // RET C
             if (get(Carry) == 1) {
-                set(PC, ram.readWord(get(SP)));
+                set(PC, ram->readWord(get(SP)));
                 increment(SP, 2);
                 cycles += 5;
             } else {
@@ -1756,15 +1761,15 @@ void CPU::cpuCycle()
             }
             break;
         case 0xD9: // RET NZ
-            set(PC, ram.readWord(get(SP)));
+            set(PC, ram->readWord(get(SP)));
             increment(SP, 2);
             cycles += 4;
-            interrupts.set(Master, 1);
-            interrupts.set(Pending, 1);
+            interrupts->set(Master, 1);
+            interrupts->set(Pending, 1);
             break;
         case 0xDA: // JP C,nn
             if (get(Carry) == 1) {
-                set(PC, ram.readWord(pc + 1));
+                set(PC, ram->readWord(pc + 1));
                 cycles += 4;
             } else {
                 increment(PC, 3);
@@ -1774,8 +1779,8 @@ void CPU::cpuCycle()
         case 0xDC: // CALL C,nn
             if (get(Carry) == 1) {
                 decrement(SP, 2);
-                ram.writeWord(get(SP), get(PC) + 3);
-                set(PC, ram.readWord(pc + 1));
+                ram->writeWord(get(SP), get(PC) + 3);
+                set(PC, ram->readWord(pc + 1));
                 cycles += 6;
             } else {
                 increment(PC, 3);
@@ -1783,7 +1788,7 @@ void CPU::cpuCycle()
             }
             break;
         case 0xDE: // SBC, nn
-            i = get(A) - (ram.readByte(pc + 1) + get(Carry));
+            i = get(A) - (ram->readByte(pc + 1) + get(Carry));
             set(Zero, !i);
             set(Subtract, 1);
             set(HalfCarry, ((i & 0xF) > (get(A) & 0xF)));
@@ -1794,34 +1799,34 @@ void CPU::cpuCycle()
             break;
         case 0xDF: // RST 18
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(PC) + 1);
+            ram->writeWord(get(SP), get(PC) + 1);
             set(PC, 0x0018);
             cycles += 4;
             break;
         case 0xE0: // LD ($FF00+n), A
-            ram.writeByte((0xFF00 + ram.readByte(pc + 1)), get(A));
+            ram->writeByte((0xFF00 + ram->readByte(pc + 1)), get(A));
             increment(PC, 2);
             cycles += 3;
             break;
         case 0xE1: // POP HL
-            set(HL, ram.readWord(get(SP)));
+            set(HL, ram->readWord(get(SP)));
             increment(SP, 2);
             increment(PC, 1);
             cycles += 3;
             break;
         case 0xE2: // LD A,($FF00+C)
-            ram.writeByte((0xFF00 + get(C)), get(A));
+            ram->writeByte((0xFF00 + get(C)), get(A));
             increment(PC, 1);
             cycles += 2;
             break;
         case 0xE5: // PUSH HL
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(HL));
+            ram->writeWord(get(SP), get(HL));
             increment(PC, 1);
             cycles += 4;
             break;
         case 0xE6: // AND A,n
-            set(A, A & ram.readByte(pc + 1));
+            set(A, A & ram->readByte(pc + 1));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1831,13 +1836,13 @@ void CPU::cpuCycle()
             break;
         case 0xE7: // RST 20
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(PC) + 1);
+            ram->writeWord(get(SP), get(PC) + 1);
             set(PC, 0x20);
             cycles += 4;
             break;
         case 0xE8: // ADD SP,n
             t = get(SP);
-            increment(SP, (signed char)ram.readByte(pc + 1));
+            increment(SP, (signed char)ram->readByte(pc + 1));
             set(Zero, 0);
             set(Subtract, 0);
             set(HalfCarry, ((get(SP) & 0xF) < (t & 0xF)));
@@ -1850,12 +1855,12 @@ void CPU::cpuCycle()
             cycles += 1;
             break;
         case 0xEA: // LD A,n
-            ram.writeByte(ram.readWord(pc + 1), get(A));
+            ram->writeByte(ram->readWord(pc + 1), get(A));
             increment(PC, 3);
             cycles += 4;
             break;
         case 0xEE: // XOR A,n
-            set(A, A ^ ram.readByte(pc + 1));
+            set(A, A ^ ram->readByte(pc + 1));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1865,40 +1870,40 @@ void CPU::cpuCycle()
             break;
         case 0xEF: // RST 28
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(PC) + 1);
+            ram->writeWord(get(SP), get(PC) + 1);
             set(PC, 0x28);
             cycles += 4;
             break;
         case 0xF0: // LD A, ($FF00+n)
-            s = ram.readByte(pc + 1);
-            set(A, ram.readByte(0xFF00 + s));
+            s = ram->readByte(pc + 1);
+            set(A, ram->readByte(0xFF00 + s));
             increment(PC, 2);
             cycles += 3;
             break;
         case 0xF1: // POP AF
-            set(AF, ram.readWord(get(SP)) & 0xFFF0);
+            set(AF, ram->readWord(get(SP)) & 0xFFF0);
             increment(SP, 2);
             increment(PC, 1);
             cycles += 3;
             break;
         case 0xF2: // LD A,($FF00+C)
-            set(A, ram.readByte(get(C) + 0xFF00));
+            set(A, ram->readByte(get(C) + 0xFF00));
             increment(PC, 1);
             cycles += 2;
             break;
         case 0xF3: // DI
             increment(PC, 1);
             cycles += 1;
-            interrupts.set(Master, 0);
+            interrupts->set(Master, 0);
             break;
         case 0xF5: // PUSH AF
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(AF));
+            ram->writeWord(get(SP), get(AF));
             increment(PC, 1);
             cycles += 4;
             break;
         case 0xF6: // OR A,n
-            set(A, A | ram.readByte(pc + 1));
+            set(A, A | ram->readByte(pc + 1));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1908,12 +1913,12 @@ void CPU::cpuCycle()
             break;
         case 0xF7: // RST 30
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(PC) + 1);
+            ram->writeWord(get(SP), get(PC) + 1);
             set(PC, 0x30);
             cycles += 4;
             break;
         case 0xF8: // LD HL, SP + n
-            s = ram.readByte(pc + 1);
+            s = ram->readByte(pc + 1);
             set(HL, get(SP) + (signed char)s);
             set(Subtract, 0);
             set(Zero, 0);
@@ -1928,19 +1933,19 @@ void CPU::cpuCycle()
             cycles += 2;
             break;
         case 0xFA: // LD A,(nn)
-            t = ram.readWord(pc + 1);
-            set(A, ram.readByte(t));
+            t = ram->readWord(pc + 1);
+            set(A, ram->readByte(t));
             increment(PC, 3);
             cycles += 4;
             break;
         case 0xFB: // DI
             increment(PC, 1);
             cycles += 1;
-            interrupts.set(Master, 1);
-            interrupts.set(Pending, 1);
+            interrupts->set(Master, 1);
+            interrupts->set(Pending, 1);
             break;
         case 0xFE: // CP n
-            s = ram.readByte(pc + 1);
+            s = ram->readByte(pc + 1);
             set(Zero, (get(A) == s));
             set(Subtract, 1);
             set(HalfCarry, (((get(A) - s) & 0xF) > (get(A) & 0xF)));
@@ -1950,7 +1955,7 @@ void CPU::cpuCycle()
             break;
         case 0xFF: // RST 38
             decrement(SP, 2);
-            ram.writeWord(get(SP), get(PC) + 1);
+            ram->writeWord(get(SP), get(PC) + 1);
             set(PC, 0x0038);
             cycles += 4;
             break;
@@ -2016,8 +2021,8 @@ void CPU::cbPrefix(uint8_t inst)
             set(Carry, s);
             break;
         case 0x06:    // RLC (HL)
-            s = (ram.readByte(get(HL)) >> 7);
-            ram.writeByte(get(HL), (((ram.readByte(get(HL)) << 1) | s)));
+            s = (ram->readByte(get(HL)) >> 7);
+            ram->writeByte(get(HL), (((ram->readByte(get(HL)) << 1) | s)));
             set(Zero, !get(HL));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -2081,8 +2086,8 @@ void CPU::cbPrefix(uint8_t inst)
             set(Carry, s);
             break;
         case 0x0E:    // RRC (HL)
-            s = (ram.readByte(get(HL)) & 0x1);
-            ram.writeByte(get(HL), ((ram.readByte(get(HL)) << 1) | (s)));
+            s = (ram->readByte(get(HL)) & 0x1);
+            ram->writeByte(get(HL), ((ram->readByte(get(HL)) << 1) | (s)));
             set(Zero, !get(HL));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -2146,8 +2151,8 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 0);
             break;
         case 0x16:    // RL (HL)
-            s = ram.readByte(get(HL)) >> 7;
-            ram.writeByte(get(HL), ((ram.readByte(get(HL)) << 1) | (get(Carry))));
+            s = ram->readByte(get(HL)) >> 7;
+            ram->writeByte(get(HL), ((ram->readByte(get(HL)) << 1) | (get(Carry))));
             set(Carry, (s));
             set(Zero, !get(HL));
             set(Subtract, 0);
@@ -2211,8 +2216,8 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 0);
             break;
         case 0x1E:    // RR (HL)
-            s = (ram.readByte(get(HL)) & 0x1);
-            ram.writeByte(get(HL), ((ram.readByte(get(HL)) >> 1) | (get(Carry) << 7)));
+            s = (ram->readByte(get(HL)) & 0x1);
+            ram->writeByte(get(HL), ((ram->readByte(get(HL)) >> 1) | (get(Carry) << 7)));
             set(Carry, s);
             set(Zero, !get(HL));
             set(Subtract, 0);
@@ -2276,8 +2281,8 @@ void CPU::cbPrefix(uint8_t inst)
             set(Carry, s);
             break;
         case 0x26:    // SLA HL
-            s = (ram.readByte(get(HL)) >> 7);
-            ram.writeByte(get(HL), ((ram.readByte(get(HL)) << 1)));
+            s = (ram->readByte(get(HL)) >> 7);
+            ram->writeByte(get(HL), ((ram->readByte(get(HL)) << 1)));
             set(Zero, !get(HL));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -2341,8 +2346,8 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 0);
             break;
         case 0x2E:    // SRA (HL)
-            s = ram.readByte(get(HL)) & 1;
-            ram.writeByte(get(HL), ((ram.readByte(get(HL)) >> 1) | (s)));
+            s = ram->readByte(get(HL)) & 1;
+            ram->writeByte(get(HL), ((ram->readByte(get(HL)) >> 1) | (s)));
             set(Carry, (s));
             set(Zero, !get(HL));
             set(Subtract, 0);
@@ -2400,7 +2405,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(Carry, 0);
             break;
         case 0x36:    // SWAP HL
-            ram.writeByte(get(HL), (((get(HL) & 0x0F) << 4) | ((get(HL) & 0xF0) >> 4)));
+            ram->writeByte(get(HL), (((get(HL) & 0x0F) << 4) | ((get(HL) & 0xF0) >> 4)));
             set(Zero, !get(HL));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -2463,8 +2468,8 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 0);
             break;
         case 0x3E:    // SRL (HL)
-            s = ram.readByte(get(HL)) & 1;
-            ram.writeByte(get(HL), ((ram.readByte(get(HL)) >> 1)));
+            s = ram->readByte(get(HL)) & 1;
+            ram->writeByte(get(HL), ((ram->readByte(get(HL)) >> 1)));
             set(Carry, (s));
             set(Zero, !get(HL));
             set(Subtract, 0);
@@ -2510,7 +2515,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 1);
             break;
         case 0x46:    // BIT (HL) 0
-            set(Zero, !(ram.readByte(get(HL)) & 0x01));
+            set(Zero, !(ram->readByte(get(HL)) & 0x01));
             set(Subtract, 0);
             set(HalfCarry, 1);
             cycles += 2;
@@ -2551,7 +2556,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 1);
             break;
         case 0x4E:    // BIT (HL) 1
-            set(Zero, !(ram.readByte(get(HL)) & 0x02));
+            set(Zero, !(ram->readByte(get(HL)) & 0x02));
             set(Subtract, 0);
             set(HalfCarry, 1);
             cycles += 2;
@@ -2592,7 +2597,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 1);
             break;
         case 0x56:    // BIT (HL) 2
-            set(Zero, !(ram.readByte(get(HL)) & 0x04));
+            set(Zero, !(ram->readByte(get(HL)) & 0x04));
             set(Subtract, 0);
             set(HalfCarry, 1);
             cycles += 2;
@@ -2633,7 +2638,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 1);
             break;
         case 0x5E:    // BIT (HL) 3
-            set(Zero, !(ram.readByte(get(HL)) & 0x08));
+            set(Zero, !(ram->readByte(get(HL)) & 0x08));
             set(Subtract, 0);
             set(HalfCarry, 1);
             cycles += 2;
@@ -2674,7 +2679,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 1);
             break;
         case 0x66:    // BIT (HL) 4
-            set(Zero, !(ram.readByte(get(HL)) & 0x10));
+            set(Zero, !(ram->readByte(get(HL)) & 0x10));
             set(Subtract, 0);
             set(HalfCarry, 1);
             cycles += 2;
@@ -2715,7 +2720,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 1);
             break;
         case 0x6E:    // BIT (HL) 5
-            set(Zero, !(ram.readByte(get(HL)) & 0x20));
+            set(Zero, !(ram->readByte(get(HL)) & 0x20));
             set(Subtract, 0);
             set(HalfCarry, 1);
             cycles += 2;
@@ -2756,7 +2761,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 1);
             break;
         case 0x76:    // BIT (HL) 6
-            set(Zero, !(ram.readByte(get(HL)) & 0x40));
+            set(Zero, !(ram->readByte(get(HL)) & 0x40));
             set(Subtract, 0);
             set(HalfCarry, 1);
             cycles += 2;
@@ -2797,7 +2802,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(HalfCarry, 1);
             break;
         case 0x7E:    // BIT (HL) 7
-            set(Zero, !(ram.readByte(get(HL)) & 0x80));
+            set(Zero, !(ram->readByte(get(HL)) & 0x80));
             set(Subtract, 0);
             set(HalfCarry, 1);
             cycles += 2;
@@ -2826,7 +2831,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) & 0xFE);;
             break;
         case 0x86:    // RES (HL) 0
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) & 0xFE));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) & 0xFE));
             cycles += 2;
             break;
         case 0x87:    // RES A 0
@@ -2851,7 +2856,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) & 0xFD);;
             break;
         case 0x8E:    // RES (HL) 1
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) & 0xFD));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) & 0xFD));
             cycles += 2;
             break;
         case 0x8F:    // RES A 1
@@ -2876,7 +2881,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) & 0xFB);;
             break;
         case 0x96:    // RES (HL) 2
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) & 0xFB));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) & 0xFB));
             cycles += 2;
             break;
         case 0x97:    // RES A 2
@@ -2901,7 +2906,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) & 0xF7);;
             break;
         case 0x9E:    // RES (HL) 3
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) & 0xF7));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) & 0xF7));
             cycles += 2;
             break;
         case 0x9F:    // RES A 3
@@ -2926,7 +2931,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) & 0xEF);;
             break;
         case 0xA6:    // RES (HL) 4
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) & 0xEF));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) & 0xEF));
             cycles += 2;
             break;
         case 0xA7:    // RES A 4
@@ -2951,7 +2956,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) & 0xDF);;
             break;
         case 0xAE:    // RES (HL) 5
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) & 0xDF));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) & 0xDF));
             cycles += 2;
             break;
         case 0xAF:    // RES A 5
@@ -2976,7 +2981,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) & 0xBF);;
             break;
         case 0xB6:    // RES (HL) 6
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) & 0xBF));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) & 0xBF));
             cycles += 2;
             break;
         case 0xB7:    // RES A 6
@@ -3001,7 +3006,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) & 0x7F);;
             break;
         case 0xBE:    // RES (HL) 7
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) & 0x7F));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) & 0x7F));
             cycles += 2;
             break;
         case 0xBF:    // RES A 7
@@ -3026,7 +3031,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) | 0x01);;
             break;
         case 0xC6:    // SET (HL) 0
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) | 0x01));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) | 0x01));
             cycles += 2;
             break;
         case 0xC7:    // SET A 0
@@ -3051,7 +3056,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) | 0x02);;
             break;
         case 0xCE:    // SET (HL) 1
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) | 0x02));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) | 0x02));
             cycles += 2;
             break;
         case 0xCF:    // SET A 1
@@ -3076,7 +3081,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) | 0x04);;
             break;
         case 0xD6:    // SET (HL) 2
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) | 0x04));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) | 0x04));
             cycles += 2;
             break;
         case 0xD7:    // SET A 2
@@ -3101,7 +3106,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) | 0x08);;
             break;
         case 0xDE:    // SET (HL) 3
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) | 0x08));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) | 0x08));
             cycles += 2;
             break;
         case 0xDF:    // SET A 3
@@ -3126,7 +3131,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) | 0x10);;
             break;
         case 0xE6:    // SET (HL) 4
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) | 0x10));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) | 0x10));
             cycles += 2;
             break;
         case 0xE7:    // SET A 4
@@ -3151,7 +3156,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) | 0x20);;
             break;
         case 0xEE:    // SET (HL) 5
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) | 0x20));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) | 0x20));
             cycles += 2;
             break;
         case 0xEF:    // SET A 5
@@ -3176,7 +3181,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) | 0x40);;
             break;
         case 0xF6:    // SET (HL) 6
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) | 0x40));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) | 0x40));
             cycles += 2;
             break;
         case 0xF7:    // SET A 6
@@ -3201,7 +3206,7 @@ void CPU::cbPrefix(uint8_t inst)
             set(L, get(L) | 0x80);;
             break;
         case 0xFE:    // SET (HL) 7
-            ram.writeByte(get(HL), (ram.readByte(get(HL)) | 0x80));
+            ram->writeByte(get(HL), (ram->readByte(get(HL)) | 0x80));
             cycles += 2;
             break;
         case 0xFF:    // SET A 7

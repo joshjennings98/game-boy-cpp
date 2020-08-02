@@ -7,6 +7,9 @@
 #include <string>
 #include <fstream>
 #include "rom.h"
+#include "timer.h"
+#include "interrupts.h"
+#include "lcd.h"
 
 class RAM {
     private: 
@@ -22,8 +25,13 @@ class RAM {
         int dPadButtons;
         int dPadDirections;
         uint8_t mask;
+
+        Timer * timers;
+        Interrupts * interrupts;
+        LCD * lcd;
+
     public:
-        RAM();
+        RAM(Timer * timers, Interrupts * interrupts, LCD * lcd);
         uint8_t readByte(uint16_t addr);
         uint16_t readWord(uint16_t addr);
         void writeByte(uint16_t addr, uint8_t value);
