@@ -10,6 +10,48 @@ int spritePalette1[] = {0, 1, 2, 3};
 int spritePalette2[] = {0, 1, 2, 3};
 unsigned long colours[4] = {0xFFFFFF, 0xC0C0C0, 0x808080, 0x000000};
 
+void Sprite::setX(int val)
+{
+    x = val;
+}
+
+void Sprite::setY(int val)
+{
+    y = val;
+}
+
+int Sprite::getX()
+{
+    return x;
+}
+
+int Sprite::getY()
+{
+    return y;
+}
+
+
+void Sprite::setFlags(int val)
+{
+    flags = val;
+}
+
+void Sprite::setPatternNum(int val)
+{
+    patternNum = val;
+}
+
+int Sprite::getFlags()
+{
+    return flags;
+}
+
+int Sprite::getPatternNum()
+{
+    return patternNum;
+}
+
+
 LCD::LCD(/* CPU * cpu */)
 {
     lcdc = LCDC();

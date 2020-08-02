@@ -1,5 +1,5 @@
 #include <iostream>
-#include <SDL2/SDL.h>
+#include "SDL2/SDL.h"
 #include "sdl.h"
 
 struct timeval t1, t2;

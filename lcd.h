@@ -52,13 +52,13 @@ class Sprite {
         int patternNum;
         int flags;
     public:
-        void setX(int x);
-        void setY(int y);
+        void setX(int val);
+        void setY(int val);
         int getX();
         int getY();
 
-        void setFlags(int flags);
-        void setPatternNum(int y);
+        void setFlags(int val);
+        void setPatternNum(int val);
         int getFlags();
         int getPatternNum();
 };
