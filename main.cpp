@@ -12,15 +12,18 @@
 #include "cpu.cpp"
 
 int main() {
+
+    unsigned int cycles = 0;
+
     Interrupts interrupts;
 
-    LCD lcd = LCD(&interrupts);
+    LCD lcd = LCD(&interrupts, &cycles);
 
-    Timer timers = Timer(&interrupts);
+    Timer timers = Timer(&interrupts, &cycles);
 
     RAM ram = RAM(&timers, &interrupts, &lcd);
 
-    CPU cpu(&interrupts, &timers, &lcd, &ram);
+    CPU cpu(&interrupts, &timers, &lcd, &ram, &cycles);
 
     std::cout << std::endl;
 

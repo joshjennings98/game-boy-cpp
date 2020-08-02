@@ -79,18 +79,16 @@ class LCD {
         int frame;
         int lyCompare;
 
-        // CPU * cpu;
-        //Interrupts * interrupts;
         Display * display;
         Keypad * keypad;
+        unsigned int * cycles;
     public:
         LCDS lcds;
         LCDC lcdc;
 
-        //RAM * ram;
         Interrupts * interrupts;
         
-        LCD(/* RAM * ram, */ Interrupts * interrupts);
+        LCD(Interrupts * interrupts, unsigned int * cycles);
 
         Keypad * getKeyPad();
         Display * getDisplay();

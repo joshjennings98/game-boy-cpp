@@ -1,13 +1,13 @@
 #include <iostream>
 #include "timer.h"
 
-Timer::Timer(Interrupts * interrupt /*, CPU * cpu */)
+Timer::Timer(Interrupts * interrupt, unsigned int * cycles)
 {
     time = 0;
     change = 0;
     
     this->interrupt = interrupt;
-    // this->cpu = cpu
+    this->cycles = cycles;
 }
 
 void Timer::setDiv(uint8_t value)
@@ -90,8 +90,11 @@ void Timer::doTick()
 
 void Timer::doCycle()
 {
-    unsigned int delta = 0; // cpu->getCycles() - time;
-    time = 0; // cpu->getCycles();
+    //unsigned int delta = cpu->getCycles() - time;
+    //time = cpu->getCycles();
+
+    unsigned int delta = *cycles - time;
+    time = *cycles;
 
     change += delta * 4;
 

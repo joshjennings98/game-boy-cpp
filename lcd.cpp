@@ -54,13 +54,9 @@ int Sprite::getPatternNum()
 }
 
 
-LCD::LCD(/* RAM * ram, */ Interrupts * interrupts)
+LCD::LCD(Interrupts * interrupts, unsigned int * cycles)
 {
-    //lcdc = LCDC();
-    //lcds = LCDS();
-
-    //this->cpu = cpu;
-    //this->ram = ram;
+    this->cycles = cycles;
     this->interrupts = interrupts;
     std::cout << "LCD inited" << std::endl;
 }
@@ -385,13 +381,13 @@ Display * LCD::getDisplay()
 }
 
 int LCD::lcdCycle(int timeStart, RAM * ram) {
-    int cycles = 0; //getCycles();
+    //int cycles = cpu->getCycles();
     static int prevLine;
 
     int this_frame;
     int end = 0;
     
-    this_frame = cycles % (70224/4); // 70224 clks per screen
+    this_frame = *cycles % (70224/4); // 70224 clks per screen
     line = this_frame / (456/4); // 465 clks per line
 
     if (this_frame < 204/4)

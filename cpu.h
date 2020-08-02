@@ -15,7 +15,7 @@ class CPU {
         std::array<uint8_t, 8> registers;
         uint16_t stackPointer;
         uint16_t programCounter;
-        unsigned int cycles;
+        unsigned int * cycles;
     public:
         Interrupts * interrupts;
         Timer * timers;
@@ -27,7 +27,7 @@ class CPU {
 
         bool halted;
 
-        CPU(Interrupts * interrupts, Timer * timers, LCD * lcd, RAM * ram);
+        CPU(Interrupts * interrupts, Timer * timers, LCD * lcd, RAM * ram, unsigned int * cycles);
         void loadROM(std::string filename);
         void set(Registers8 reg, uint8_t value);
         void set(Registers16 reg, uint16_t value);
