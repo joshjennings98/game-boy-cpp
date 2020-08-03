@@ -198,6 +198,16 @@ void CPU::cpuCycle()
     uint16_t pc = get(PC);
     uint8_t instruction = ram->readByte(pc);
 
+    /*
+    bool p = false;
+    if (p)
+        std::cin.ignore();
+    else
+        std::cout << std::endl;
+    */
+
+    std::cout << "PC: " << pc << " Opcode: 0x" << std::hex << (int) instruction << std::endl;
+
     switch (instruction) {
         case 0x00: // NOP
             increment(PC, 1);
@@ -1289,7 +1299,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xA0: // AND A,B
-            set(A, A & get(B));
+            set(A, get(A) & get(B));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1298,7 +1308,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xA1: // AND A,C
-            set(A, A & get(C));
+            set(A, get(A) & get(C));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1307,7 +1317,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xA2: // AND A,D
-            set(A, A & get(D));
+            set(A, get(A) & get(D));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1316,7 +1326,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xA3: // AND A,E
-            set(A, A & get(E));
+            set(A, get(A) & get(E));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1325,7 +1335,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xA4: // AND A,H
-            set(A, A & get(H));
+            set(A, get(A) & get(H));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1334,7 +1344,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xA5: // AND A,L
-            set(A, A & get(L));
+            set(A, get(A) & get(L));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1343,7 +1353,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xA6: // AND A,(HL)
-            set(A, A & ram->readByte(get(HL)));
+            set(A, get(A) & ram->readByte(get(HL)));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1352,7 +1362,7 @@ void CPU::cpuCycle()
             *cycles += 2;
             break;
         case 0xA7: // AND A,A
-            set(A, A & get(A));
+            set(A, get(A) & get(A));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1361,7 +1371,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xA8: // XOR A,B
-            set(A, A ^ get(B));
+            set(A, get(A) ^ get(B));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1370,7 +1380,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xA9: // XOR A,C
-            set(A, A ^ get(C));
+            set(A, get(A) ^ get(C));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1379,7 +1389,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xAA: // XOR A,D
-            set(A, A ^ get(D));
+            set(A, get(A) ^ get(D));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1388,7 +1398,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xAB: // XOR A,E
-            set(A, A ^ get(E));
+            set(A, get(A) ^ get(E));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1397,7 +1407,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xAC: // XOR A,H
-            set(A, A ^ get(H));
+            set(A, get(A) ^ get(H));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1406,7 +1416,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xAD: // XOR A,L
-            set(A, A ^ get(L));
+            set(A, get(A) ^ get(L));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1415,7 +1425,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xAE: // XOR A,(HL)
-            set(A, A ^ ram->readByte(get(HL)));
+            set(A, get(A) ^ ram->readByte(get(HL)));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1424,7 +1434,7 @@ void CPU::cpuCycle()
             *cycles += 2;
             break;
         case 0xAF: // XOR A,A
-            set(A, A ^ get(A));
+            set(A, get(A) ^ get(A));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1433,7 +1443,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xB0: // OR A,B
-            set(A, A | get(B));
+            set(A, get(A) | get(B));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1442,7 +1452,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xB1: // OR A,C
-            set(A, A | get(C));
+            set(A, get(A) | get(C));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1451,7 +1461,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xB2: // OR A,D
-            set(A, A | get(D));
+            set(A, get(A) | get(D));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1460,7 +1470,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xB3: // OR A,E
-            set(A, A | get(E));
+            set(A, get(A) | get(E));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1469,7 +1479,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xB4: // OR A,H
-            set(A, A | get(H));
+            set(A, get(A) | get(H));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1478,7 +1488,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xB5: // OR A,L
-            set(A, A | get(L));
+            set(A, get(A) | get(L));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1487,7 +1497,7 @@ void CPU::cpuCycle()
             *cycles += 1;
             break;
         case 0xB6: // OR A,(HL)
-            set(A, A | ram->readByte(get(HL)));
+            set(A, get(A) | ram->readByte(get(HL)));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1496,7 +1506,7 @@ void CPU::cpuCycle()
             *cycles += 2;
             break;
         case 0xB7: // OR A,A
-            set(A, A | get(A));
+            set(A, get(A) | get(A));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1828,7 +1838,7 @@ void CPU::cpuCycle()
             *cycles += 4;
             break;
         case 0xE6: // AND A,n
-            set(A, A & ram->readByte(pc + 1));
+            set(A, get(A) & ram->readByte(pc + 1));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 1);
@@ -1862,7 +1872,7 @@ void CPU::cpuCycle()
             *cycles += 4;
             break;
         case 0xEE: // XOR A,n
-            set(A, A ^ ram->readByte(pc + 1));
+            set(A, get(A) ^ ram->readByte(pc + 1));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1905,7 +1915,7 @@ void CPU::cpuCycle()
             *cycles += 4;
             break;
         case 0xF6: // OR A,n
-            set(A, A | ram->readByte(pc + 1));
+            set(A, get(A) | ram->readByte(pc + 1));
             set(Zero, !get(A));
             set(Subtract, 0);
             set(HalfCarry, 0);
@@ -1964,6 +1974,8 @@ void CPU::cpuCycle()
         default:
             printf("Instruction: %02X\n", (int)instruction);
             printf("Undefined instruction.\n");
+            increment(PC, 1);
+            std::cin.ignore();
             break;
     }
 }
