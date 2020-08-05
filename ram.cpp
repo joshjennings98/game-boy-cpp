@@ -104,12 +104,13 @@ uint8_t RAM::readByte(uint16_t addr)
     } else if (0xFF80 <= addr && addr < 0xFFFF) {
         return hram[addr - 0xFF80];
     } else if (0xFFFF == addr) {
-        // return interrupt register (make in registers)
+        return interrupts->get(Enable);
     }
     return 0x0; // base case
 }
 
 uint16_t RAM::readWord(uint16_t addr) {
+    // std::cout << std::endl << std::hex << (int) readByte(addr) << (int) readByte(addr + 1) << std::endl;
     return readByte(addr) | readByte(addr + 1) << 8;
 }
 
@@ -143,7 +144,6 @@ void RAM::writeByte(uint16_t addr, uint8_t value)
     } else if (addr == 0xFF04) { 
         timers->setTac(value);
     } else if (addr == 0xFF40) { 
-        //std::cout << 3 << std::endl;
         lcd->lcdc.setLCDC(value);
     } else if (addr == 0xFF41) { 
         lcd->lcds.setLCDS(value);
@@ -176,7 +176,7 @@ void RAM::writeByte(uint16_t addr, uint8_t value)
     } else if (0xFF80 <= addr && addr < 0xFFFF) {
         hram[addr - 0xFF80] = value;
     } else if (0xFFFF == addr) {
-        // enable interrupt register (make in registers)
+        interrupts->set(Enable, value);
     }
 }
 
