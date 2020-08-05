@@ -54,14 +54,16 @@ int Sprite::getPatternNum()
 }
 
 
-LCD::LCD(Interrupts * interrupts, unsigned int * cycles)
+LCD::LCD(Interrupts * interrupts, unsigned int * cycles, Display * display)
 {
     this->cycles = cycles;
     this->interrupts = interrupts;
+    this->display = display;
     std::cout << "LCD inited" << std::endl;
 }
 
 LCDC::LCDC() {
+    /*
     lcdDisplay = 0; // 7
     windowTileMap = 0; // 6
     windowDisplay = 0; // 5
@@ -70,16 +72,19 @@ LCDC::LCDC() {
     spriteSize = 0; // 2
     spriteDisplay = 0; // 1
     bgWindowDisplay = 0; // 0
+    */
     std::cout << "LCDC inited" << lcdDisplay << std::endl;
 }
 
 LCDS::LCDS() {
+    /*
     lyInterrupt = 0;
     oamInterrupt = 0;
     vblankInterrupt = 0;
     hblankInterrupt = 0;
     lyFlag = 0;
     modeFlag = 0;
+    */
     std::cout << "LCDS inited" << std::endl;
 }
 
@@ -290,8 +295,9 @@ void LCD::drawSprites(unsigned int *buf, int line, int blocks, std::vector<Sprit
         }
 
         spriteRow = 
-            sprites[i].getFlags() & 
-            0x40 ? (lcdc.getSpriteSize() ? 15 : 7) - (line - sprites[i].getY()) : line - sprites[i].getY();
+            sprites[i].getFlags() & 0x40 
+            ? (lcdc.getSpriteSize() ? 15 : 7) - (line - sprites[i].getY()) 
+            : line - sprites[i].getY();
 
         // similar to background
 		tileAddr = 0x8000 + (sprites[i].getPatternNum()*16) + spriteRow*2;
@@ -370,17 +376,7 @@ void LCD::renderLine(int line, RAM * ram) {
     drawSprites(buf, line, c, sprites, ram);
 }
 
-Keypad * LCD::getKeyPad()
-{
-    return keypad;
-}
-
-Display * LCD::getDisplay()
-{
-    return display;
-}
-
-int LCD::lcdCycle(int timeStart, RAM * ram) {
+int LCD::lcdCycle(unsigned int timeStart, RAM * ram) {
     //int cycles = cpu->getCycles();
     static int prevLine;
 
@@ -412,10 +408,10 @@ int LCD::lcdCycle(int timeStart, RAM * ram) {
     if (prevLine == 143 && line == 144) {
         // draw the entire frame
         interrupts->updateFlags(vblank);
-        getDisplay()->sdlSetFrame();
-        SDL_Event e;
-        
-        getKeyPad()->handleInput(e);
+        display->sdlSetFrame();
+
+        if(display->sdlUpdate())
+            end = 1;
 
         float deltaT = (float)1000 / (59.7) - (float)(SDL_GetTicks() - timeStart);
         if (deltaT > 0)

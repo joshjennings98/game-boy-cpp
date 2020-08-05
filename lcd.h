@@ -80,7 +80,7 @@ class LCD {
         int lyCompare;
 
         Display * display;
-        Keypad * keypad;
+        //Keypad * keypad;
         unsigned int * cycles;
     public:
         LCDS lcds;
@@ -88,10 +88,10 @@ class LCD {
 
         Interrupts * interrupts;
         
-        LCD(Interrupts * interrupts, unsigned int * cycles);
+        LCD(Interrupts * interrupts, unsigned int * cycles, Display * display);
 
-        Keypad * getKeyPad();
-        Display * getDisplay();
+        //Keypad * getKeyPad();
+        //Display * getDisplay();
 
         void setScrollX(uint8_t value);
         void setScrollY(uint8_t value);
@@ -107,7 +107,7 @@ class LCD {
         uint8_t getWindowX();
         uint8_t getWindowY();
         int getLine();
-        int lcdCycle(int timeStart, RAM * ram);
+        int lcdCycle(unsigned int timeStart, RAM * ram);
 
         void renderLine(int line, RAM * ram);
         void drawBgWindow(unsigned int *buf, int line, RAM * ram);
