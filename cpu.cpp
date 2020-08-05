@@ -4,8 +4,6 @@
 #include "interrupts.h"
 #include "ram.h"
 
-// The pointer to cycles might cause problems?
-
 CPU::CPU(Interrupts * interrupts, Timer * timers, LCD * lcd, RAM * ram, unsigned int * cycles, DebugSetting debug)
 {
     this->debug = (debug == Debug);
@@ -69,7 +67,24 @@ void CPU::set(Registers16 reg, uint16_t value)
 
 void CPU::set(Flag flag, bool value)
 {
-    registers[F] |= value ? (0x80 >> flag) : ~(0x80 >> flag);
+    //registers[F] |= value ? (0x80 >> flag) : ~(0x80 >> flag);
+    //registers[F] = (registers[F] & ((~(0x80 >> flag) << 4) & 0xff)) | (value << (7 - flag));
+    // registers[F] = (registers[F] & ~(1 << (7 - value)) | (value << (7 - flag)));
+    
+    switch(flag) {
+        case(Zero): 
+            registers[F] = (registers[F] & 0x7F) | (value << 7);
+            break;
+        case(Subtract): 
+            registers[F] = (registers[F] & 0xBF) | (value << 6);
+            break;
+        case(HalfCarry): 
+            registers[F] = (registers[F] & 0xDF) | (value << 5);
+            break;
+        case(Carry): 
+            registers[F] = (registers[F] & 0xEF) | (value << 4);
+            break;
+    }
 }
 
 uint8_t CPU::get(Registers8 reg)
@@ -192,7 +207,7 @@ void CPU::cpuCycle()
     uint8_t instruction = ram->readByte(pc);
 
     if (debug) {
-        std::cin.ignore();
+        //std::cin.ignore();
 
         std::cout << std::hex << (int) ram->readByte(pc) << " " << (int) ram->readByte(pc + 1) << " " << (int) ram->readByte(pc + 2) << std::endl << std::endl;
         std::cout << std::hex << "PC: 0x" << (int) get(PC) << std::endl << "SP: 0x" << (int) get(SP) << std::endl;
@@ -216,7 +231,7 @@ void CPU::cpuCycle()
             increment(PC, 3);
             *cycles += 3;
             break;
-        case 0x02: if (debug) std::cout << std::endl << "LD (BC),A" << std::endl;
+        case 0x02: if (debug) std::cout << std::endl << "LD (BC), A" << std::endl;
             ram->writeByte(get(BC), get(A));
             increment(PC, 1);
             *cycles += 2;
@@ -258,7 +273,7 @@ void CPU::cpuCycle()
             increment(PC, 1);
             *cycles += 1;
             break;
-        case 0x08: if (debug) std::cout << std::endl << "LD (" << (int) ram->readByte(pc+2) << (int) ram->readByte(pc+1) <<"),SP" << std::endl;
+        case 0x08: if (debug) std::cout << std::endl << "LD (" << (int) ram->readByte(pc+2) << (int) ram->readByte(pc+1) <<"), SP" << std::endl;
             ram->writeWord(ram->readWord(pc + 1), get(SP));
             increment(PC, 3);
             *cycles += 5;
@@ -298,7 +313,7 @@ void CPU::cpuCycle()
             increment(PC, 1);
             *cycles += 1;
             break;
-        case 0x0E: if (debug) std::cout << std::endl << "LD C, 0x" << (int) ram->readByte(pc+1) <<"" << std::endl;
+        case 0x0E: if (debug) std::cout << std::endl << "LD C, 0x" << (int) ram->readByte(pc+1) << "" << std::endl;
             set(C, ram->readByte(pc + 1));
             increment(PC, 2);
             *cycles += 2;
@@ -323,7 +338,7 @@ void CPU::cpuCycle()
             increment(PC, 3);
             *cycles += 3;
             break;
-        case 0x12: if (debug) std::cout << std::endl << "LD (DE),A" << std::endl;
+        case 0x12: if (debug) std::cout << std::endl << "LD (DE), A" << std::endl;
             ram->writeByte(get(DE), get(A));
             increment(PC, 1);
             *cycles += 2;
@@ -364,7 +379,7 @@ void CPU::cpuCycle()
             increment(PC, 1);
             *cycles += 1;
             break;
-        case 0x18: if (debug) std::cout << std::endl << "JP n" << std::endl;
+        case 0x18: if (debug) std::cout << std::endl << "JR 0x" << (int) ram->readByte(pc + 1) << std::endl;
             increment(PC, (signed char)ram->readByte(pc + 1) + 2);
             *cycles += 3;
             break;
@@ -433,7 +448,7 @@ void CPU::cpuCycle()
             *cycles += 3;
             break;
         case 0x22: if (debug) std::cout << std::endl << "LDI (HL), A" << std::endl;
-            ram->writeByte(get(HL),get(A));
+            ram->writeByte(get(HL), get(A));
             set(HL, (get(HL) + 1));
             increment(PC, 1);
             *cycles += 2;
@@ -894,32 +909,32 @@ void CPU::cpuCycle()
             increment(PC, 1);
             *cycles += 1;
             break;
-        case 0x70: if (debug) std::cout << std::endl << "LD (HL),B" << std::endl;
+        case 0x70: if (debug) std::cout << std::endl << "LD (HL), B" << std::endl;
             ram->writeByte(get(HL), get(B));
             increment(PC, 1);
             *cycles += 2;
             break;
-        case 0x71: if (debug) std::cout << std::endl << "LD (HL),C" << std::endl;
+        case 0x71: if (debug) std::cout << std::endl << "LD (HL), C" << std::endl;
             ram->writeByte(get(HL), get(C));
             increment(PC, 1);
             *cycles += 2;
             break;
-        case 0x72: if (debug) std::cout << std::endl << "LD (HL),D" << std::endl;
+        case 0x72: if (debug) std::cout << std::endl << "LD (HL), D" << std::endl;
             ram->writeByte(get(HL), get(D));
             increment(PC, 1);
             *cycles += 2;
             break;
-        case 0x73: if (debug) std::cout << std::endl << "LD (HL),E" << std::endl;
+        case 0x73: if (debug) std::cout << std::endl << "LD (HL), E" << std::endl;
             ram->writeByte(get(HL), get(E));
             increment(PC, 1);
             *cycles += 2;
             break;
-        case 0x74: if (debug) std::cout << std::endl << "LD (HL),H" << std::endl;
+        case 0x74: if (debug) std::cout << std::endl << "LD (HL), H" << std::endl;
             ram->writeByte(get(HL), get(H));
             increment(PC, 1);
             *cycles += 2;
             break;
-        case 0x75: if (debug) std::cout << std::endl << "LD (HL),L" << std::endl;
+        case 0x75: if (debug) std::cout << std::endl << "LD (HL), L" << std::endl;
             ram->writeByte(get(HL), get(L));
             increment(PC, 1);
             *cycles += 2;
@@ -929,7 +944,7 @@ void CPU::cpuCycle()
             increment(PC, 1);
             *cycles += 1;
             break;
-        case 0x77: if (debug) std::cout << std::endl << "LD (HL),A" << std::endl;
+        case 0x77: if (debug) std::cout << std::endl << "LD (HL), A" << std::endl;
             ram->writeByte(get(HL), get(A));
             increment(PC, 1);
             *cycles += 2;
@@ -1679,7 +1694,7 @@ void CPU::cpuCycle()
                 *cycles += 3;
             }
             break;
-        case 0xCD: if (debug) std::cout << std::endl << "CALL n" << std::endl;
+        case 0xCD: if (debug) std::cout << std::endl << "CALL 0x" << (int) ram->readByte(pc + 1) << std::endl;
             decrement(SP, 2);
             ram->writeWord(get(SP), get(PC) + 3);
             set(PC, ram->readWord(pc + 1));
@@ -1927,7 +1942,7 @@ void CPU::cpuCycle()
             set(PC, 0x30);
             *cycles += 4;
             break;
-        case 0xF8: if (debug) std::cout << std::endl << "LD HL, SP + n" << std::endl;
+        case 0xF8: if (debug) std::cout << std::endl << "LD HL, SP + 0x" << (int) ram->readByte(pc + 1) << std::endl;
             s = ram->readByte(pc + 1);
             set(HL, get(SP) + (signed char)s);
             set(Subtract, 0);
@@ -1954,7 +1969,7 @@ void CPU::cpuCycle()
             interrupts->set(Master, 1);
             interrupts->set(Pending, 1);
             break;
-        case 0xFE: if (debug) std::cout << std::endl << "CP n" << std::endl;
+        case 0xFE: if (debug) std::cout << std::endl << "CP 0x" << (int) ram->readByte(pc + 1) << std::endl;
             s = ram->readByte(pc + 1);
             set(Zero, (get(A) == s));
             set(Subtract, 1);
