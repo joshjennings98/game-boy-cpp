@@ -1,40 +1,40 @@
 #include <iostream>
 #include "interrupts.h"
-//#include "cpu.h"
+#include "cpu.h"
 
-/*
-void Interrupts::doCycle() {
+
+void Interrupts::doCycle(CPU * cpu) {
     if (pending == 1) {
         pending = 0;
     } else if (master && enable && flags) {
 
         if (enable & flags & vblank) {
             flags &= ~vblank; // turn off specific flag
-            cpuInterrupt(0x40);
+            cpu->cpuInterrupt(0x40);
         }
 
         if (enable & flags & lcdstat) {
             flags &= ~lcdstat;
-            cpuInterrupt(0x48);
+            cpu->cpuInterrupt(0x48);
         }
 
         if (enable & flags & timer) {
             flags &= ~timer;
-            cpuInterrupt(0x50);
+            cpu->cpuInterrupt(0x50);
         }
         
         if (enable & flags & serial) {
             flags &= ~serial;
-            cpuInterrupt(0x58);
+            cpu->cpuInterrupt(0x58);
         }
 
         if (enable & flags & joypad) {
             flags &= ~joypad;
-            cpuInterrupt(0x60);
+            cpu->cpuInterrupt(0x60);
         }
     }
 }
-*/
+
 
 uint8_t Interrupts::getFlags()
 {
