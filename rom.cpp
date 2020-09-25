@@ -2,10 +2,6 @@
 #include "ram.h"
 #include "rom.h"
 
-ROM::ROM() {
-    // Does nothing might remove later
-}
-
 void ROM::load(std::string filename) {
 
     std::cout << "Trying to load " << filename << std::endl;
@@ -30,12 +26,12 @@ void ROM::load(std::string filename) {
 
         set(romType, header[romTypeOffset]);
 
-        for (int i = 0; i<16; i++) {
+        for (int i = 0; i < 16; i++) {
             gameTitle[i] = header[romTitleOffset + i];
         }
 
-        set(romSize, 16 * (2 << (header[romSizeOffset] + 1))); // pow(2,header[ROM_SIZE_OFFSET]+1) * 16;
-        set(ramSize, 0.5 * (2 << (2 * header[romRamOffset]))); // rom.ramSize = pow(4, header[ROM_RAM_OFFSET])/2;
+        set(romSize, 16 * (2 << (header[romSizeOffset] + 1)));
+        set(ramSize, 0.5 * (2 << (2 * header[romRamOffset]))); 
 
         romFile.close();
     }

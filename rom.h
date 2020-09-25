@@ -21,7 +21,6 @@ class ROM {
         static const int romRamOffset = 0x149;
         static const int headerSize = 0x14F;
         
-        ROM();
         void load(std::string filename);
         char get(RomInfo info);
         void set(RomInfo info, char value);

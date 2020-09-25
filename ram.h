@@ -9,6 +9,7 @@
 #include "rom.h"
 #include "timer.h"
 #include "interrupts.h"
+#include "sdl.h"
 #include "lcd.h"
 
 class RAM {
@@ -29,9 +30,10 @@ class RAM {
         Timer * timers;
         Interrupts * interrupts;
         LCD * lcd;
+        Display * display;
 
     public:
-        RAM(Timer * timers, Interrupts * interrupts, LCD * lcd);
+        RAM(Timer * timers, Interrupts * interrupts, LCD * lcd, Display * display);
         uint8_t readByte(uint16_t addr);
         uint16_t readWord(uint16_t addr);
         void writeByte(uint16_t addr, uint8_t value);

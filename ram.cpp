@@ -7,11 +7,12 @@
 #include "rom.h"
 #include "lcd.h"
 
-RAM::RAM(Timer * timers, Interrupts * interrupts, LCD * lcd)
+RAM::RAM(Timer * timers, Interrupts * interrupts, LCD * lcd, Display * display)
 {
     this->timers = timers;
     this->interrupts = interrupts;
     this->lcd = lcd;
+    this->display = display;
 
     // Make sure initisalised to zero
     rom00.fill(0x0);
@@ -73,12 +74,12 @@ uint8_t RAM::readByte(uint16_t addr)
     } else if (addr == 0xFF00) {
         mask = 0;
         if (!dPadButtons) {
-            // set mask to getButton
+            mask = display->getButton();
         }
         if (!dPadDirections) {
-            // set mask to getDirection
+            mask = display->getDirection();
         }
-        // return 0xC0 | (0xF ^ mask) | (dPadButtons | dPadDirections);
+        return 0xC0 | (0xF ^ mask) | (dPadButtons | dPadDirections);
     } else if (addr == 0xFF04) {
         return timers->getDiv();
     } else if (addr == 0xFF05) {
@@ -110,7 +111,6 @@ uint8_t RAM::readByte(uint16_t addr)
 }
 
 uint16_t RAM::readWord(uint16_t addr) {
-    // std::cout << std::endl << std::hex << (int) readByte(addr) << (int) readByte(addr + 1) << std::endl;
     return readByte(addr) | readByte(addr + 1) << 8;
 }
 
@@ -193,16 +193,12 @@ void RAM::copyToOAM(uint16_t OAM, uint16_t DMA, unsigned int length) {
 
 void RAM::changeROMbank(ROM rom, int bankNum) {
     std::vector<uint8_t> romData = rom.getData(bankNum * 0x4000, 0x4000);
-    std::cout << romData.size() << std::endl;
-    // std::copy(romData.begin(), romData.end(), rom01);
     for (int i = 0; i < rom01.size(); i++)
         rom01[i] = romData[i];
 }
 
 void RAM::loadROM(ROM rom) {
     std::vector<uint8_t> romData = rom.getData(0x0000, 0x8000);
-    // std::copy(romData.begin(), romData.begin() + 0x4000, rom00);
-    // std::copy(romData.begin() + 0x4000, romData.end(), rom01);
     for (int i = 0; i < 0x4000; i++) {
         rom00[i] = romData[i];
         rom01[i] = romData[i + 0x4000];
