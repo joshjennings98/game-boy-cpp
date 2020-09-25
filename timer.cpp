@@ -58,8 +58,6 @@ void Timer::setTac(uint8_t value)
         case 3:
             speed = 4;
             break;
-        default:
-            break;
     }
 }
 
@@ -71,12 +69,12 @@ uint8_t Timer::getTac()
 void Timer::doTick()
 {
     tick++;
-
+    
     if (started && tick == 0x10) {
         div++;
         tick = 0x0;
     }
-    
+
     if (started && tick == speed) {
         tima++;
         tick = 0x0;
@@ -90,9 +88,6 @@ void Timer::doTick()
 
 void Timer::doCycle()
 {
-    //unsigned int delta = cpu->getCycles() - time;
-    //time = cpu->getCycles();
-
     unsigned int delta = *cycles - time;
     time = *cycles;
 
