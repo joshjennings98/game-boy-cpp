@@ -5,24 +5,23 @@
 #include "ram.h"
 #include "interrupts.h"
 #include "sdl.h"
-//#include "cpu.h"
-// #include "ram.h"
+
+enum ModeFlag {HBlank, VBlank, OAM, VRAM};
 
 class RAM;
 
 // LCD Control 
 class LCDC {
+    private:
+        int lcdDisplay; 
+        int windowTileMap;
+        int windowDisplay; 
+        int tileDataSelect; 
+        int tileMapSelect; 
+        int spriteSize; 
+        int spriteDisplay; 
+        int bgWindowDisplay; 
     public:
-    //private:
-        int lcdDisplay; // 7
-        int windowTileMap; // 6
-        int windowDisplay; // 5
-        int tileDataSelect; // 4
-        int tileMapSelect; // 3
-        int spriteSize; // 2
-        int spriteDisplay; // 1
-        int bgWindowDisplay; // 0
-    //public:
         LCDC();
         void setLCDC(uint8_t value);
         uint8_t getLCDC();
@@ -47,7 +46,7 @@ class LCDS {
         LCDS();
         void setLCDS(uint8_t value);
         uint8_t getLCDS();
-        void setModeFlag(int value);
+        void setModeFlag(ModeFlag value);
         int getLyInterrupt();
 };
 
@@ -58,13 +57,9 @@ class Sprite {
         int patternNum;
         int flags;
     public:
-        void setX(int val);
-        void setY(int val);
+        Sprite(int x, int y, int patternNum, int flags);
         int getX();
         int getY();
-
-        void setFlags(int val);
-        void setPatternNum(int val);
         int getFlags();
         int getPatternNum();
 };
@@ -80,7 +75,6 @@ class LCD {
         int lyCompare;
 
         Display * display;
-        //Keypad * keypad;
         unsigned int * cycles;
     public:
         LCDS lcds;
@@ -89,9 +83,6 @@ class LCD {
         Interrupts * interrupts;
         
         LCD(Interrupts * interrupts, unsigned int * cycles, Display * display);
-
-        //Keypad * getKeyPad();
-        //Display * getDisplay();
 
         void setScrollX(uint8_t value);
         void setScrollY(uint8_t value);
@@ -111,8 +102,7 @@ class LCD {
 
         void renderLine(int line, RAM * ram);
         void drawBgWindow(unsigned int *buf, int line, RAM * ram);
-        void drawSprites(unsigned int *buf, int line, int blocks, std::vector<Sprite> sprites, RAM * ram);
-        std::vector<Sprite> sortSprites(std::vector<Sprite> sprites, int c);
+        void drawSprites(unsigned int *buf, int line, std::vector<Sprite> &sprites, RAM * ram);
         void draw_stuff();
 };
 
