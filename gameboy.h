@@ -14,9 +14,8 @@
 class GameBoy {
     private:
         unsigned int cycles;
-        bool debug;
+        
         ROM rom;
-
         Interrupts * interrupts;
         Display * display;
         LCD * lcd;
@@ -24,7 +23,7 @@ class GameBoy {
         RAM * ram;
         CPU * cpu;
     public:
-        GameBoy(DebugSetting debug = NoDebug);
+        GameBoy();
         void load(std::string filename);
         void run();
 };

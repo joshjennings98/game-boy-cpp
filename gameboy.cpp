@@ -1,16 +1,15 @@
 #include "gameboy.h"
 
-GameBoy::GameBoy(DebugSetting debug) 
+GameBoy::GameBoy() 
 {
     cycles = 0;
-    this->debug = (debug == Debug);
 
     interrupts = new Interrupts();
     display = new Display();
     lcd = new LCD(interrupts, &cycles, display);
     timers = new Timer(interrupts, &cycles);
-    ram = new RAM(timers, interrupts, lcd);
-    cpu = new CPU(interrupts, timers, lcd, ram, &cycles, debug);
+    ram = new RAM(timers, interrupts, lcd, display);
+    cpu = new CPU(interrupts, timers, lcd, ram, &cycles);
 
 }
 
@@ -22,17 +21,9 @@ void GameBoy::load(std::string filename)
 
 void GameBoy::run()
 {
-    while (true) {
-        unsigned int timeStart = SDL_GetTicks();
-
+    while (lcd->lcdCycle(SDL_GetTicks(), ram)) {
         cpu->cpuCycle();
         interrupts->doCycle(cpu);
         timers->doCycle();
-
-        if (!lcd->lcdCycle(timeStart, ram))
-            break;
-        
-        if (debug)
-            std::cout << "cycles: " << cycles << std::endl;
     }
 }
