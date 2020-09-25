@@ -4,7 +4,7 @@
 Display::Display() {
     SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow(
-        "Game Boy Emulator", 
+        "Josh's Game Boy Emulator", 
         SDL_WINDOWPOS_CENTERED, 
         SDL_WINDOWPOS_CENTERED, 
         160, 144, SDL_WINDOW_OPENGL
@@ -12,11 +12,11 @@ Display::Display() {
     screen = SDL_GetWindowSurface(window);
 }
 
-void Display::sdlSetFrame(void) {
+void Display::sdlSetFrame() {
     SDL_UpdateWindowSurface(window);
 }
 
-int Display::sdlUpdate(void) {
+int Display::sdlUpdate() {
     SDL_Event event;
     
     while (SDL_PollEvent(&event)) {        
@@ -96,10 +96,10 @@ unsigned int * Display::sdlFrameBuffer() {
     return static_cast<unsigned int*>(screen->pixels);
 }
 
-unsigned int Display::getButton(void) {
+unsigned int Display::getButton() {
     return ((buttons.start * 8) | (buttons.select * 4) | (buttons.b * 2) | buttons.a);
 }
 
-unsigned int Display::getDirection(void) {
+unsigned int Display::getDirection() {
     return ((buttons.down * 8) | (buttons.up * 4) | (buttons.left * 2) | buttons.right);
 }
