@@ -2,10 +2,9 @@
 #include "interrupts.h"
 #include "cpu.h"
 
-
 void Interrupts::doCycle(CPU * cpu) {
     if (pending == 1) {
-        pending = 0;
+        pending -= 1;
     } else if (master && enable && flags) {
 
         if (enable & flags & vblank) {
@@ -35,7 +34,6 @@ void Interrupts::doCycle(CPU * cpu) {
     }
 }
 
-
 uint8_t Interrupts::getFlags()
 {
     return flags;
@@ -61,8 +59,6 @@ void Interrupts::set(InterruptFlag flag, bool value)
         case(Flags):
             flags = value;
             break;
-        default:
-            break;
     }
 }
 
@@ -77,7 +73,5 @@ uint8_t Interrupts::get(InterruptFlag flag)
             return pending;
         case(Flags):
             return flags;
-        default:
-            break;
     }
 }
