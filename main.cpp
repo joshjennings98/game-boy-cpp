@@ -12,11 +12,16 @@
 #include "cpu.cpp"
 #include "gameboy.cpp"
 
-int main() {
+int main(int argc, char *argv[]) {
 
-    GameBoy gameboy(NoDebug);
+    if(argc != 2) {
+		std::cout << "Error, must provide a rom. (" << argv[0] << " <rom>)" << std::endl;
+		return 0;
+	}
 
-    gameboy.load("tetris.gb");
+    GameBoy gameboy;
+
+    gameboy.load(argv[1]);
 
     gameboy.run();
 
